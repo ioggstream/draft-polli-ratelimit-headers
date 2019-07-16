@@ -2,9 +2,9 @@
 
 This is the working area for the individual Internet-Draft, "Resource Digests for HTTP".
 
-* [Editor's Copy](https://ioggstream.github.io/draft-polli-resource-digests-http/#go.draft-polli-resource-digests-http.html)
-* [Individual Draft](https://tools.ietf.org/html/draft-polli-resource-digests-http)
-* [Compare Editor's Copy to Individual Draft](https://ioggstream.github.io/draft-polli-resource-digests-http/#go.draft-polli-resource-digests-http.diff)
+* [Editor's Copy](https://ioggstream.github.io/draft-polli-ratelimit-headers/#go.draft-polli-ratelimit-headers.html)
+* [Individual Draft](https://tools.ietf.org/html/draft-polli-ratelimit-headers)
+* [Compare Editor's Copy to Individual Draft](https://ioggstream.github.io/draft-polli-ratelimit-headers/#go.draft-polli-ratelimit-headers.diff)
 
 ## Building the Draft
 
@@ -21,4 +21,4 @@ This requires that you have the necessary software installed.  See
 ## Contributing
 
 See the
-[guidelines for contributions](https://github.com/ioggstream/draft-polli-resource-digests-http/blob/master/CONTRIBUTING.md).
+[guidelines for contributions](https://github.com/ioggstream/draft-polli-ratelimit-headers/blob/master/CONTRIBUTING.md).
