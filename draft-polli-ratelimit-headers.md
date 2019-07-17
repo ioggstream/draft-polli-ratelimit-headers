@@ -71,7 +71,7 @@ The source code and issues list for this draft can be found at
 
 The widespreading of HTTP as a distributed computation protocol
 requires an explicit way of communicating service status and
-quotas.
+usage quotas.
 
 This was partially addressed with the `Retry-After` header field
 defined in [RFC7231] to be served in `429 Too Many Requests` or 
@@ -82,7 +82,7 @@ in a way to prevent 4xx or 5xx responses, so that
 the client can throttle its requests. 
 
 
-## Rate-limit headers: current implementation
+## Rate-limit headers: current implementations
 
 On the web we can find many different rate-limit headers. The 
 values commonly returned are the following:
@@ -148,6 +148,9 @@ The goals do not include:
     that may be the given resource-target, its parent path or the whole
     Origin [RFC6454] section 7.
 
+  Enforcing specific response status code:
+  : This specification does not cover the response status code
+    that may be used in replies.
     
 
 ## Notational Conventions
@@ -164,22 +167,22 @@ The term Origin is to be interpreted as described in [RFC6454] section 7.
 
 # Throttling requests {#throttling}
 
-Servers use quota mechanisms to limit resource consumption or to enforce some limitations,
-eg for monetization.
+Servers use quota mechanisms to avoid systems overload, 
+to ensure an equitable distribution of computational resources 
+or to enforce other policies - eg monetization.
 
-A basic quota mechanisms is based on allowing the client to issue a given number
-of requests in a given interval, eg. 10 requests per second. 
+A basic quota mechanisms can be implemented defining the number of allowable
+requests in a given time window, eg. 10 requests per second. 
 
 Quotas may be enforced on different basis (eg. per user, per IP, ..) and
-at different levels, eg: a user may be allowed to issue
-
+at different levels. For example, an user may be allowed to issue:
 
 - 10 requests per second;
 - limited to 60 request per minute;
 - limited to 1000 request per hour.
 
-When quota is exceeded, servers usually not service the request. Instead they
-usually reply with a `429` http status code or adopt more aggresive policies 
+When quota is exceeded, servers usually not service the request. Instead, they
+reply with a `4xx` http status code (eg. 429 or 403) or adopt more aggresive policies 
 like dropping connections.
 
 Complex throttling policies involving different delay intervals can be poorly
@@ -487,3 +490,6 @@ TBD
    While this might be of some value, my experience suggests that overly-complex quota implementations
    results in lower effectiveness of this policy. This spec allows the client to easily focusing on
    RateLimit-Remaining and RateLimit-Reset.
+
+7. Can I use RateLimit-\* in throttled responses?
+   Yes, you can.
