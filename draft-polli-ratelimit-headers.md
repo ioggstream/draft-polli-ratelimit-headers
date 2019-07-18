@@ -377,6 +377,41 @@ Response:
 ~~~
 
 
+### Use in conjunction with custom headers
+
+The server uses two custom headers, 
+namely `acme-RateLimit-DayLimit` and `acme-RateLimit-HourLimit`
+to expose the quotas.
+
+Daily quota is 5000, and the client consumed 4900
+in the first 5 hours.  Despite of the next hourly limit, the closest limit
+to reach is the daily one.
+
+The server then exposes the `RateLimit-*` headers to
+inform the client that:
+
+- it has only 100 request left;
+- the window will reset in 10 hours.
+
+~~~
+Request:
+
+  GET /items/123
+
+Response:
+
+  HTTP/1.1 200 Ok
+  Content-Type: application/json
+  acme-RateLimit-DayLimit: 5000
+  acme-RateLimit-HourLimit: 1000
+  RateLimit-Limit: 5000
+  Ratelimit-Remaining: 100
+  Ratelimit-Reset: 36000
+
+  {"hello": "world"}
+~~~
+
+
 # Security Considerations
 
 ## Throttling does not prevent clients from issuing requests
