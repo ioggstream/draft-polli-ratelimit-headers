@@ -20,18 +20,11 @@ author:
     email: robipolli@gmail.com
 
 normative:
-  RFC1321:
-  RFC3230:
   RFC2119:
-  RFC5789:
-  RFC5843:
-  RFC4648:
   RFC5234:
   RFC6454:
-  RFC6585:
   RFC7230:
   RFC7231:
-  RFC7233:
   RFC7405:
   RFC8174:
   UNIX:
@@ -42,16 +35,13 @@ normative:
     date: 1997-02
 
 informative:
-  RFC2818:
-  RFC5788:
-  RFC6962:
-  RFC7396:
+  RFC6585:
 
 --- abstract
 
-This document defines the RateLimit-Limit, RateLimit-Remaining, RateLimit-Reset header fields for HTTP, thus allowing
- the server to publish current request quotas and the client to shape its requests and avoid
- receiving a 429 Too Many Request response.
+This document defines the RateLimit-Limit, RateLimit-Remaining, RateLimit-Reset header fields for HTTP,
+thus allowing servers to publish current request quotas and
+clients to shape their request policy and avoid being throttled out.
 
 --- note_Note_to_Readers
 
@@ -96,7 +86,7 @@ The common choice is to return three headers containing:
   as a timestamp;
 
 It is common that those headers are returned by HTTP intermediaries
-such that API Gateways or Reverse Proxies.
+such as API gateways and reverse proxies.
 
 Commonly used header field names are:
 
@@ -167,6 +157,7 @@ The goals do not include:
     
 
 ## Notational Conventions
+
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD",
 "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "OPTIONAL" in this
 document are to be interpreted as described in BCP 14 ([RFC2119] and [RFC8174])
@@ -199,11 +190,11 @@ When quota is exceeded, servers usually do not service the request
 Instead, they reply with a `4xx` http status code (eg. 429 or 403)
 or adopt more aggresive policies like dropping connections.
 
-Complex throttling policies involving different windows can be poorly
-implemented by clients.
+Complex throttling policies involving different windows and related header
+field names can be poorly implemented by clients.
 
 This specification provides a standard way to communicate
-quota informations so that the client avoids running over quota.
+quota informations to help clients avoiding running over quota.
 
 This specification does not cover:
 
@@ -226,14 +217,14 @@ the server throttles it.
 The header value is
 
     RateLimit-Limit = "RateLimit-Limit" ":" OWS ratelimit-limit-value
-    ratelimit-limit-value = rlimit [ ";" "delay" "=" delay-seconds]
+    ratelimit-limit-value = rlimit [ ";" "window" "=" delay-seconds]
     rlimit = 1*DIGIT
     delay-seconds = 1*DIGIT
 
-A `RateLimit-Limit` header MAY contain a `delay-seconds` parameter 
+A `RateLimit-Limit` header MAY contain a `window` parameter 
 defining the quota interval.
 
-If `delay-seconds` is not specified, it should be communicated out-of-bound
+If `window` is not specified, it should be communicated out-of-bound
 (eg. in the documentation) or inferred by the value of `RateLimit-Reset`
 at the moment of the reset.
 
@@ -241,7 +232,7 @@ Examples:
 
 ~~~
    RateLimit-Limit: 100
-   RateLimit-Limit: 100; delay=10
+   RateLimit-Limit: 100; window=10
 ~~~
 
 ## RateLimit-Remaining {#ratelimit-remaining-header}
@@ -331,7 +322,7 @@ Response:
 
   HTTP/1.1 200 Ok
   Content-Type: application/json
-  RateLimit-Limit: 100; delay=60
+  RateLimit-Limit: 100; window=60
   Ratelimit-Remaining: 99
   Ratelimit-Reset: 50
 
@@ -525,7 +516,7 @@ TBD
    We could, if there's an agreement on that ;) eg
 
    ```
-   RateLimit-Limit: 10; delay=1, 50; delay=60, 1000; delay=3600, 5000; delay=86400
+   RateLimit-Limit: 10; window=1, 50; window=60, 1000; window=3600, 5000; window=86400
    ```
 
 5. Do we want to tie this spec to RFC 6585?
