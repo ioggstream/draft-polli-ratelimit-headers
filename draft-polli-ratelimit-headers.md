@@ -74,64 +74,77 @@ requires an explicit way of communicating service status and
 usage quotas.
 
 This was partially addressed with the `Retry-After` header field
-defined in [RFC7231] to be served in `429 Too Many Requests` or 
-`503 Service Unavailable`.
+defined in [RFC7231] to be returned in `429 Too Many Requests` or 
+`503 Service Unavailable` responses.
 
-Still there is not a standard way to communicate service quotas
+Still, there is not a standard way to communicate service quotas
 in a way to prevent 4xx or 5xx responses, so that 
 the client can throttle its requests. 
 
 
-## Rate-limit headers: current implementations
+## Current landscape of rate-limiting headers
 
-On the web we can find many different rate-limit headers. The 
-values commonly returned are the following:
+On the web we can find many different rate-limit headers, usually
+containing the number of allowed requests
+in a given time window, and when the window is reset.
 
-- the total number of allowed requests in the given time-frame;
-- the number of remaining requests in the given time-frame;
-- the "number of seconds to" or the "timestamp of" the instant
-  where the quota is reset.
+The common choice is to return three headers containing:
+
+- the maximum number of allowed requests in the time window;
+- the number of remaining requests in the current window;
+- the time remaining in the current window expressed in seconds or 
+  as a timestamp;
 
 It is common that those headers are returned by HTTP intermediaries
 such that API Gateways or Reverse Proxies.
 
-Example header field names are:
+Commonly used header field names are:
 
 - `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`; 
 - `X-Rate-Limit-Limit`, `X-Rate-Limit-Remaining`, `X-Rate-Limit-Reset`.
 
-There are variants too, where the quota time-frame is specified
-directly in the header field name, eg:
+There are variants too, where the window is specified
+in the header field name, eg:
 
 - `x-ratelimit-limit-minute`, `x-ratelimit-limit-hour`, `x-ratelimit-limit-day`
+- `x-ratelimit-remaining-minute`, `x-ratelimit-remaining-hour`, `x-ratelimit-remaining-day`
 
-The limit of this flexibility is that the very same application may
-have different throttling headers depending on the gateway/proxy
-that protects it.
 
+### Interoperability issues
+
+A major interoperability issue in throttling is the lack
+of standard headers, because:
+
+- each implementation associates different semantics to the
+  same header field names;
+- header field names proliferates.
+
+Client applications interfacing with different servers may thus
+need to process different headers,
+or the very same application interface that sits behind different 
+reverse proxies may reply with different throttling headers.
 
 ## This proposal
 
-This proposal defines the follwing header fields, their syntax and behavior:
+This proposal defines syntax and semantics for the following throttling header fields:
 
-- `RateLimit-Limit` containing the total number of request allowed a given time-frame;
-- `RateLimit-Remaining` containing the remaining number of requests before the expiration of `RateLimit-Reset`;
-- `RateLimit-Reset` containing the number of seconds to the reset of the quota or the instant of the reset of the quota.
+- `RateLimit-Limit`: containing the maximum number of allowed requests in the time window;
+- `RateLimit-Reset`: containing the time remaining in the current window, specified in seconds or as a timestamp;
+- `RateLimit-Remaining`: containing the number of remaining requests in the current window;
 
 The behavior of `RateLimit-Reset` is compatible with the one of `Retry-After`.
 
 To mitigate issues related to clock synchronization, the preferred way to
-specify the `RateLimit-Reset` is using the seconds notation respect to
-the date one.
+specify the `RateLimit-Reset` is using the seconds notation respect to the timestamp one.
 
 ## Goals
 
 The goals of this proposal are:
 
-   1. Standardizing the rate-limit headers to simplify their enforcement
+   1. Standardizing the names and semantic of rate-limit headers;
 
-   2. Improve resiliency of HTTP infrastructures allowing clients to 
-      avoid reaching over-quota.
+   2. Improve resiliency of HTTP infrastructures simplifying
+      the enforcement and the adoption of rate-limit headers;
 
    3. Simplify API documentation avoiding expliciting
       rate-limit header fields semantic in documentation.
@@ -144,13 +157,13 @@ The goals do not include:
     authorized users could be granted a quota.
 
   Definition of a Throttling scope:
-  : This specification does not cover the scope of the throttling,
+  : This specification does not cover the throttling scope,
     that may be the given resource-target, its parent path or the whole
     Origin [RFC6454] section 7.
 
   Enforcing specific response status code:
   : This specification does not cover the response status code
-    that may be used in replies.
+    that may be used in throttled replies.
     
 
 ## Notational Conventions
@@ -181,22 +194,22 @@ at different levels. For example, an user may be allowed to issue:
 - limited to 60 request per minute;
 - limited to 1000 request per hour.
 
-When quota is exceeded, servers usually not service the request. Instead, they
-reply with a `4xx` http status code (eg. 429 or 403) or adopt more aggresive policies 
-like dropping connections.
+When quota is exceeded, servers usually do not service the request
 
-Complex throttling policies involving different delay intervals can be poorly
+Instead, they reply with a `4xx` http status code (eg. 429 or 403)
+or adopt more aggresive policies like dropping connections.
+
+Complex throttling policies involving different windows can be poorly
 implemented by clients.
 
 This specification provides a standard way to communicate
 quota informations so that the client avoids running over quota.
 
-
 This specification does not cover:
 
 -  the scope of the request throttling,
    that may be the given request-target, its parent path or the whole Origin;
--  whether non 2xx responses contribute or not to the reach of the quota.
+-  whether non 2xx responses contribute or not to reach the quota limits.
 
 ...
 
@@ -206,8 +219,8 @@ The following headers are defined
 
 ## RateLimit-Limit {#ratelimit-limit-header}
 
-The `RateLimit-Limit` response header field indicates the total number of
-requests the client is allowed to make in a given interval before
+The `RateLimit-Limit` response header field indicates the maximum number of
+requests that the client is allowed to make in the time window, before
 the server throttles it.
 
 The header value is
@@ -303,7 +316,7 @@ Response:
   {"hello": "world"}
 ~~~
 
-### Throttling interval specified via parameter
+### Throttling window specified via parameter
 
 The client is allowed to make 99 more requests in the next 50 seconds.
 Throttling interval is communicated by `delay`, so we know the quota is 100 requests
