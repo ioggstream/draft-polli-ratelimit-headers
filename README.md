@@ -1,4 +1,4 @@
-# Resource Digests for HTTP
+# Rate Limit headers for HTTP
 
 This is the working area for the individual Internet-Draft, "Resource Digests for HTTP".
 
