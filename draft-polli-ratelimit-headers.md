@@ -35,6 +35,7 @@ normative:
     date: 1997-02
 
 informative:
+  RFC3339:
   RFC6585:
 
 --- abstract
@@ -108,6 +109,21 @@ of standard headers, because:
 - each implementation associates different semantics to the
   same header field names;
 - header field names proliferates.
+
+Here are some examples:
+
+- `X-RateLimit-Remaining` references different values, depending on the implementation:
+
+   * seconds remaining to the window expiration
+   * milliseconds remaining to the window expiration
+   * seconds since UTC, in UNIX Timestamp
+   * a datetime, either HTTP-Date or [RFC3339]
+
+- different headers, with the same semantic, are used by different implementors:
+
+  * X-RateLimit-Limit and X-Rate-Limit-Limit
+  * X-RateLimit-Remaining and X-Rate-Limit-Remaining
+  * X-RateLimit-Reset and X-Rate-Limit-Reset
 
 Client applications interfacing with different servers may thus
 need to process different headers,
