@@ -1,6 +1,6 @@
 # Rate Limit headers for HTTP
 
-This is the working area for the individual Internet-Draft, "Resource Digests for HTTP".
+This is the working area for the individual Internet-Draft, "Rate Limit headers for HTTP".
 
 * [Editor's Copy](https://ioggstream.github.io/draft-polli-ratelimit-headers/#go.draft-polli-ratelimit-headers.html)
 * [Individual Draft](https://tools.ietf.org/html/draft-polli-ratelimit-headers)
