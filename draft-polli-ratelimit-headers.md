@@ -170,7 +170,14 @@ The goals do not include:
   Enforcing specific response status code:
   : This specification does not cover the response status code
     that may be used in throttled replies.
-    
+
+  Specify a throttling policy:
+  : This specification does not impose any throttling policy, but
+    provides a mechanism for communicating your one.
+    The values published in the headers, including the window size,
+    can be statically or dynamically evaluated.
+    Moreover a different weight may be assigned to different requests.
+
 
 ## Notational Conventions
 
@@ -192,7 +199,10 @@ to ensure an equitable distribution of computational resources
 or to enforce other policies - eg monetization.
 
 A basic quota mechanisms can be implemented defining the number of allowable
-requests in a given time window, eg. 10 requests per second. 
+requests in a given time window, eg. 10 requests per second.
+
+Moreover system metrics, statistics and euristics can be used
+to implement dynamic and more complex rate limiting policies.
 
 Quotas may be enforced on different basis (eg. per user, per IP, ..) and
 at different levels. For example, an user may be allowed to issue:
@@ -201,7 +211,7 @@ at different levels. For example, an user may be allowed to issue:
 - limited to 60 request per minute;
 - limited to 1000 request per hour.
 
-When quota is exceeded, servers usually do not service the request
+When quota is exceeded, servers usually do not service the request.
 
 Instead, they reply with a `4xx` http status code (eg. 429 or 403)
 or adopt more aggresive policies like dropping connections.
@@ -216,7 +226,8 @@ This specification does not cover:
 
 -  the scope of the request throttling,
    that may be the given request-target, its parent path or the whole Origin;
--  whether non 2xx responses contribute or not to reach the quota limits.
+-  whether non 2xx responses contribute or not to reach the quota limits;
+-  which strategies to use to implement your quota policy.
 
 ...
 
@@ -412,12 +423,42 @@ Response:
   acme-RateLimit-DayLimit: 5000
   acme-RateLimit-HourLimit: 1000
   RateLimit-Limit: 5000
-  Ratelimit-Remaining: 100
-  Ratelimit-Reset: 36000
+  RateLimit-Remaining: 100
+  RateLimit-Reset: 36000
 
   {"hello": "world"}
 ~~~
 
+
+### Use for limiting concurrency
+
+Throttling headers may be used to limit concurrency,
+advertising limits that are lower than the usual ones
+in case of saturation, thus increasing availability.
+
+The server adopted a basic quota policy of 100 requests
+per minute. For clarity we added the window parameter.
+
+Due to resource exhaustion, it implemented a policy that
+adapt the values returned in the rate-limit headers,
+reducing both RateLimit-Limit and RateLimit-Remaining.
+
+
+~~~
+Request:
+
+  GET /items/123
+
+Response:
+
+  HTTP/1.1 200 Ok
+  Content-Type: application/json
+  RateLimit-Limit: 50; window=60
+  RateLimit-Remaining: 20
+  RateLimit-Reset: 58
+
+  {"hello": "world"}
+~~~
 
 # Security Considerations
 
@@ -522,7 +563,6 @@ TBD
 
    To align with Retry-After header, which is returned in similar contexts, eg on 429 responses.
 
-
 3. Why don't pass the trottling scope as a parameter?
 
    We could if there's an agreement on that ;).
@@ -546,5 +586,23 @@ TBD
    results in lower effectiveness of this policy. This spec allows the client to easily focusing on
    RateLimit-Remaining and RateLimit-Reset.
 
-7. Can I use RateLimit-\* in throttled responses?
+7. Can I use RateLimit-\* in throttled responses (eg together with 429)?
    Yes, you can.
+
+8. Shouldn't I limit concurrency instead of request rate?
+   You can do both. The goal of this spec is to provide guidance for
+   clients in shaping their requests without being throttled out.
+
+   Usually, limiting concurrency results in unserviced client requests,
+   which is something you may want to avoid.
+
+   A standard way to limit concurrency is to return 503 + Retry-After
+   in case of resource saturation (eg. thrashing, connection queues too long,
+   Service Level Objectives not meet, ..).
+
+   Dynamically lowering the values returned by the rate-limit headers,
+   and returning retry-after along with them can improve availability.
+
+   Saturation conditions can be either dynamic or static: all this is out of
+   the scope for the current document.
+
