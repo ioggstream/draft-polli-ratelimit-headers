@@ -89,6 +89,9 @@ The common choice is to return three headers containing:
 It is common that those headers are returned by HTTP intermediaries
 such as API gateways and reverse proxies.
 
+Almost all rate-limit headers implementations do not use subsecond precision,
+because the conveyed values are usually subject to response-time latency.
+
 Commonly used header field names are:
 
 - `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`; 
@@ -99,6 +102,7 @@ in the header field name, eg:
 
 - `x-ratelimit-limit-minute`, `x-ratelimit-limit-hour`, `x-ratelimit-limit-day`
 - `x-ratelimit-remaining-minute`, `x-ratelimit-remaining-hour`, `x-ratelimit-remaining-day`
+
 
 
 ### Interoperability issues
@@ -179,6 +183,11 @@ The goals do not include:
     can be statically or dynamically evaluated.
     Moreover a different weight may be assigned to different requests.
 
+  Service Level Agreement:
+  : This specification allows a server to provide quota hints to the clients.
+    Those hints do not imply that respectful clients will not be throttled
+    out or denied service under certain circumstances.
+
 
 ## Notational Conventions
 
@@ -223,6 +232,20 @@ field names can be poorly implemented by clients.
 This specification provides a standard way to communicate
 quota informations to help clients avoiding running over quota.
 
+## Time window {#time-window}
+
+Rate limit policies allow a client to issue a maximum number
+of requests in a give time window.
+
+The `time-window` value is in seconds, and its syntax is the following:
+
+    time-window = delay-seconds
+    delay-seconds = 1*DIGIT
+
+Subsecond precision is not supported.
+
+## Further considerations
+
 This specification does not cover:
 
 -  the scope of the request throttling,
@@ -234,7 +257,12 @@ This specification does not cover:
 
 # Header Specifications
 
-The following headers are defined
+The following `RateLimit` response header fields are defined
+
+Note: RFC EDITOR PLEASE DELETE THIS NOTE; Implementations of drafts
+of this specification MUST NOT use the `RateLimit` prefix. Instead
+they MUST use the `X-RateLimit` one. Draft header field names
+are thus `X-RateLimit-Limit`, `X-RateLimit-Remaining` and `X-RateLimit-Reset`.
 
 ## RateLimit-Limit {#ratelimit-limit-header}
 
@@ -245,22 +273,27 @@ the server throttles it.
 The header value is
 
     RateLimit-Limit = "RateLimit-Limit" ":" OWS ratelimit-limit-value
-    ratelimit-limit-value = rlimit [ ";" "window" "=" delay-seconds]
+    ratelimit-limit-value = rlimit | 1#ratelimit-limit-value-w
+    ratelimit-limit-value-w = rlimit; "window" "=" time-window 
     rlimit = 1*DIGIT
-    delay-seconds = 1*DIGIT
 
-A `RateLimit-Limit` header MAY contain a `window` parameter 
-defining the quota interval.
+A `ratelimit-limit-value` MAY contain a `window` parameter 
+defining the {#time-window} interval.
 
-If `window` is not specified, it should be communicated out-of-bound
-(eg. in the documentation) or inferred by the value of `RateLimit-Reset`
-at the moment of the reset.
+If the `window` parameter is not specified, the {#time-window} MUST either:
+
+- inferred by the value of `RateLimit-Reset` at the moment of the reset;
+- be communicated out-of-bound (eg. in the documentation).
+
+Quota policies using multiple quota limits MAY be returned using multiple
+`ratelimit-limit-value-w` items.
 
 Examples:
 
 ~~~
    RateLimit-Limit: 100
    RateLimit-Limit: 100; window=10
+   RateLimit-Limit: 10; window=1, 50; window=60, 1000; window=3600, 5000; window=86400
 ~~~
 
 ## RateLimit-Remaining {#ratelimit-remaining-header}
@@ -289,8 +322,8 @@ The `RateLimit-Reset` response header field indicates either:
 
 The header value is:
 
-    RateLimit-Reset = "RateLimit-Reset" ":" OWS ratelimit-remaining-value
-    ratelimit-remaining-value = Retry-After
+    RateLimit-Reset = "RateLimit-Reset" ":" OWS ratelimit-reset-value
+    ratelimit-reset-value = Retry-After
     
 The value of `Retry-After` is defined in [RFC7231] appendix D and:
 
@@ -309,6 +342,23 @@ Examples:
    RateLimit-Reset: Tue, 15 Nov 1994 08:12:31 GMT
 
 ~~~
+
+# Providing Rate-Limit headers
+
+A server MAY use one or more of the Rate-Limit response header fields
+defined in this document to communicate its quota policies.
+
+When using a quota policy involving more than one window,
+the server MUST reply with the `RateLimit` headers related to the window
+with the lower `RateLimit-Remaining` values.
+
+Under certain conditions, a server MAY artificially lower RateLimit headers values,
+eg to respond to Denial of Service attacks or in case of resource saturation.
+
+Clients MUST NOT assume that respecting `RateLimit` headers values imply any
+guarantee of being served.
+
+
 
 # Examples
 
@@ -395,6 +445,34 @@ Response:
   {"second": "request"}
 ~~~
 
+### Use with multiple windows
+
+Daily quota is 5000, and the client consumed 4900
+in the first 5 hours.
+Despite of the next hourly limit, the closest limit
+to reach is the daily one.
+
+The server then exposes the `RateLimit` headers to
+inform the client that:
+
+- it has only 100 request left;
+- the window will reset in 10 hours.
+
+~~~
+Request:
+
+  GET /items/123
+
+Response:
+
+  HTTP/1.1 200 Ok
+  Content-Type: application/json
+  RateLimit-Limit: 1000; window=3600, 5000; window=86400
+  RateLimit-Remaining: 100
+  RateLimit-Reset: 36000
+
+  {"hello": "world"}
+~~~
 
 ### Use in conjunction with custom headers
 
@@ -465,9 +543,12 @@ Response:
 
 ## Throttling does not prevent clients from issuing requests
 
-While this specification helps client to avoid
+While this specification helps clients to avoid
 going over quota, it does not prevent them to 
 make further requests.
+
+Servers should always implement their mechanisms
+to prevent resource exhaustion.
 
 ## Information disclosure
 
@@ -476,6 +557,15 @@ consume quota, if 401 and 403 responses count on quota
 a malicious client could get traffic informations of another
 user probing the endpoints.
 
+## Remainig requests are not granted requests
+
+The values passed in `Rate-Limit-*` headers are hints given from the server
+to the clients in order to avoid being throttled out.
+
+Clients SHOULD NOT give for granted the values returned in `RateLimit-Remaining`.
+
+In case of resource saturation, the server MAY artificially lower the returned
+values or not serve the request anyway.
 
 ## Resource exhaustion and clock skew
 
@@ -568,13 +658,6 @@ TBD
 
    We could if there's an agreement on that ;).
 
-4. Why don't support multiple quota limits?
-
-   We could, if there's an agreement on that ;) eg
-
-   ```
-   RateLimit-Limit: 10; window=1, 50; window=60, 1000; window=3600, 5000; window=86400
-   ```
 
 5. Do we want to tie this spec to RFC 6585?
 
