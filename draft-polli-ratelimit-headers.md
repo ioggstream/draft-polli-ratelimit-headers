@@ -158,22 +158,23 @@ The goals of this proposal are:
 The goals do not include:
 
   Authorization:
-  : The rate-limit mechanisms described here are not meant to support
-    authorization or other kinds of access controls. On the other side
-    authorized users could be granted a quota.
+  : The rate-limit headers described here are not meant to support
+    authorization or other kinds of access controls.
 
-  Definition of a Throttling scope:
+  Throttling scope:
   : This specification does not cover the throttling scope,
     that may be the given resource-target, its parent path or the whole
     Origin [RFC6454] section 7.
 
-  Enforcing specific response status code:
+  Response status code:
   : This specification does not cover the response status code
-    that may be used in throttled replies.
+    that may be used in throttled responses, nor ties the rate-limit
+    headers to any HTTP status code. They may be returned in both
+    Successful and non Successful responses.
 
-  Specify a throttling policy:
+  Throttling policy:
   : This specification does not impose any throttling policy, but
-    provides a mechanism for communicating your one.
+    provides a mechanism for communicating quota metrics.
     The values published in the headers, including the window size,
     can be statically or dynamically evaluated.
     Moreover a different weight may be assigned to different requests.
