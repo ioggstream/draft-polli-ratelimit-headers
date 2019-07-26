@@ -211,7 +211,7 @@ at different levels. For example, an user may be allowed to issue:
 - limited to 60 request per minute;
 - limited to 1000 request per hour.
 
-When quota is exceeded, servers usually do not service the request.
+When quota is exceeded, servers usually do not serve the request.
 
 Instead, they reply with a `4xx` http status code (eg. 429 or 403)
 or adopt more aggresive policies like dropping connections.
