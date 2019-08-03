@@ -71,6 +71,40 @@ Still, there is not a standard way to communicate service quotas
 in a way to prevent 4xx or 5xx responses, so that 
 the client can throttle its requests. 
 
+## Rate-Limiting {#rate-limiting}
+
+Servers use quota mechanisms to avoid systems overload,
+to ensure an equitable distribution of computational resources
+or to enforce other policies - eg monetization.
+
+A basic quota mechanisms can be implemented defining the number of allowable
+requests in a given time window, eg. 10 requests per second.
+
+Quotas may be enforced on different basis (eg. per user, per IP, per geographic area, ..) and
+at different levels. For example, an user may be allowed to issue:
+
+- 10 requests per second;
+- limited to 60 request per minute;
+- limited to 1000 request per hour.
+
+Moreover system metrics, statistics and heuristics can be used
+to implement dynamic and more complex rate-limiting policies
+involving:
+
+ - variable quotas, where the quota limit may be adapted to the current
+   conditions;
+ - sliding windows - where the time window can change
+   between subsequent responses and may be lowered even before
+   it is reached.
+
+When quota is exceeded, servers usually do not serve the request.
+
+Instead, they reply with a `4xx` http status code (eg. 429 or 403)
+or adopt more aggresive policies like dropping connections.
+
+Complex throttling policies involving different windows and related header
+field names can be poorly implemented by clients.
+
 
 ## Current landscape of rate-limiting headers
 
@@ -131,6 +165,7 @@ need to process different headers,
 or the very same application interface that sits behind different 
 reverse proxies may reply with different throttling headers.
 
+
 ## This proposal
 
 This proposal defines syntax and semantics for the following throttling header fields:
@@ -183,7 +218,8 @@ The goals do not include:
     Moreover a different weight may be assigned to different requests.
 
   Service Level Agreement:
-  : This specification allows a server to provide quota hints to the clients.
+  : This specification allows a server to provide quota hints to the clients,
+    and expose the values used to compute the quota for the current request.
     Those hints do not imply that respectful clients will not be throttled
     out or denied service under certain circumstances.
 
@@ -201,40 +237,15 @@ by [RFC7405] along with the "#rule" extension defined in Section 7 of
 
 The term Origin is to be interpreted as described in [RFC6454] section 7.
 
-# Throttling requests {#throttling}
+The term Throttling Server indicates a server implementing a rate-limiting policy.
 
-Servers use quota mechanisms to avoid systems overload, 
-to ensure an equitable distribution of computational resources 
-or to enforce other policies - eg monetization.
+# Time window and Request Limit {#time-window-request-limit}
 
-A basic quota mechanisms can be implemented defining the number of allowable
-requests in a given time window, eg. 10 requests per second.
+A Throttling Server allocates to one or more clients
+a maximum number of requests, named request-limit,
+in a given time-window.
 
-Moreover system metrics, statistics and euristics can be used
-to implement dynamic and more complex rate limiting policies.
-
-Quotas may be enforced on different basis (eg. per user, per IP, ..) and
-at different levels. For example, an user may be allowed to issue:
-
-- 10 requests per second;
-- limited to 60 request per minute;
-- limited to 1000 request per hour.
-
-When quota is exceeded, servers usually do not serve the request.
-
-Instead, they reply with a `4xx` http status code (eg. 429 or 403)
-or adopt more aggresive policies like dropping connections.
-
-Complex throttling policies involving different windows and related header
-field names can be poorly implemented by clients.
-
-This specification provides a standard way to communicate
-quota informations to help clients avoiding running over quota.
-
-## Time window {#time-window}
-
-Rate limit policies allow a client to issue a maximum number
-of requests in a give time window.
+Both the time-window and the request-limit may be fixed or variable, static or dynamic.
 
 The `time-window` value is in seconds, and its syntax is the following:
 
@@ -242,6 +253,27 @@ The `time-window` value is in seconds, and its syntax is the following:
     delay-seconds = 1*DIGIT
 
 Subsecond precision is not supported.
+
+The `request-limit` is in units, and its syntax is the following:
+
+    request-limit = 1*DIGIT
+
+Examples:
+
+- a Throttling Server may expose:
+ 
+ - a `request-limit` of 100 under normal conditions;
+ - a `request-limit` of 10 in case of server resources exhaustion.
+
+# Throttling requests {#throttling}
+
+This specification provides a standard way to communicate
+quota informations to help clients avoiding running over quota.
+
+When a Throttling Server receives a request, the server evaluates
+whether the request should be served or is over quota.
+
+The evaluation can be based on multiple `request-limit`s and multiple `time-window`s.
 
 ## Further considerations
 
@@ -266,7 +298,7 @@ are thus `X-RateLimit-Limit`, `X-RateLimit-Remaining` and `X-RateLimit-Reset`.
 ## RateLimit-Limit {#ratelimit-limit-header}
 
 The `RateLimit-Limit` response header field indicates
-the maximum number of requests that the server allocated to the client
+the `request-limit` that the server allocated to the client
 in the current time-window.
 
 If the client exceeds that limit, it MAY not be served.
@@ -346,19 +378,23 @@ Examples:
 
 # Providing Rate-Limit headers
 
-A server MAY use one or more of the Rate-Limit response header fields
-defined in this document to communicate its quota policies.
+A server MAY use one or more of the `RateLimit` response header fields
+defined in this document to communicate the metrics used to establish
+if the current request was in quota or not.
 
 When using a quota policy involving more than one window,
 the server MUST reply with the `RateLimit` headers related to the window
 with the lower `RateLimit-Remaining` values.
 
-Under certain conditions, a server MAY artificially lower RateLimit headers values,
+Under certain conditions, a server MAY artificially lower `RateLimit` headers values,
 eg to respond to Denial of Service attacks or in case of resource saturation.
+
+A server MAY not serve a request which is over quota.
+
+A server MUST NOT rely on clients respecting the values provided in the `RateLimit` headers.
 
 Clients MUST NOT assume that respecting `RateLimit` headers values imply any
 guarantee of being served.
-
 
 
 # Examples
