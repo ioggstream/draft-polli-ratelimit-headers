@@ -102,8 +102,6 @@ in the header field name, eg:
 - `x-ratelimit-limit-minute`, `x-ratelimit-limit-hour`, `x-ratelimit-limit-day`
 - `x-ratelimit-remaining-minute`, `x-ratelimit-remaining-hour`, `x-ratelimit-remaining-day`
 
-
-
 ### Interoperability issues
 
 A major interoperability issue in throttling is the lack
@@ -174,6 +172,8 @@ The goals do not include:
     that may be used in throttled responses, nor ties the rate-limit
     headers to any HTTP status code. They may be returned in both
     Successful and non Successful responses.
+    Moreover this specification does not cover whether non Successful
+    responses count on quota usage.
 
   Throttling policy:
   : This specification does not impose any throttling policy, but
@@ -265,9 +265,11 @@ are thus `X-RateLimit-Limit`, `X-RateLimit-Remaining` and `X-RateLimit-Reset`.
 
 ## RateLimit-Limit {#ratelimit-limit-header}
 
-The `RateLimit-Limit` response header field indicates the maximum number of
-requests that the client is allowed to make in the time window, before
-the server throttles it.
+The `RateLimit-Limit` response header field indicates
+the maximum number of requests that the server allocated to the client
+in the current time-window.
+
+If the client exceeds that limit, it MAY not be served.
 
 The header value is
 
