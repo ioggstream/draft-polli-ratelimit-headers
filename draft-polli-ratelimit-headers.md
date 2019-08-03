@@ -35,7 +35,6 @@ normative:
     date: 1997-02
 
 informative:
-  RFC3339:
   RFC6585:
 
 --- abstract
@@ -121,7 +120,7 @@ Here are some examples:
    * seconds remaining to the window expiration
    * milliseconds remaining to the window expiration
    * seconds since UTC, in UNIX Timestamp
-   * a datetime, either HTTP-Date or [RFC3339]
+   * a datetime, either HTTP-Date or {{?RFC3339}}
 
 - different headers, with the same semantic, are used by different implementors:
 
