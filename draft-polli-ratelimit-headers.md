@@ -85,7 +85,7 @@ The common choice is to return three headers containing:
 - the time remaining in the current window expressed in seconds or 
   as a timestamp;
 
-It is common that those headers are returned by HTTP intermediaries
+Those response headers may be added by HTTP intermediaries
 such as API gateways and reverse proxies.
 
 Almost all rate-limit headers implementations do not use subsecond precision,
@@ -220,7 +220,7 @@ at different levels. For example, an user may be allowed to issue:
 - limited to 60 request per minute;
 - limited to 1000 request per hour.
 
-When quota is exceeded, servers usually do not serve the request.
+When quota is exceeded, servers may not serve the request.
 
 Instead, they reply with a `4xx` http status code (eg. 429 or 403)
 or adopt more aggresive policies like dropping connections.
