@@ -207,23 +207,22 @@ Servers use quota mechanisms to avoid systems overload,
 to ensure an equitable distribution of computational resources 
 or to enforce other policies - eg monetization.
 
-A basic quota mechanisms can be implemented defining the number of allowable
+A basic quota mechanism limits the number of acceptable
 requests in a given time window, eg. 10 requests per second.
 
-Moreover system metrics, statistics and euristics can be used
-to implement dynamic and more complex rate limiting policies.
+When quota is exceeded, servers usually do not serve the request
+replying instead with a `4xx` HTTP status code (eg. 429 or 403)
+or adopt more aggressive policies like dropping connections.
 
-Quotas may be enforced on different basis (eg. per user, per IP, ..) and
+Quotas may be enforced on different basis (eg. per user, per IP, per geographic area, ..) and
 at different levels. For example, an user may be allowed to issue:
 
 - 10 requests per second;
 - limited to 60 request per minute;
 - limited to 1000 request per hour.
 
-When quota is exceeded, servers may not serve the request.
-
-Instead, they reply with a `4xx` http status code (eg. 429 or 403)
-or adopt more aggresive policies like dropping connections.
+Moreover system metrics, statistics and heuristics can be used
+to implement dynamic and more complex policies.
 
 Complex throttling policies involving different windows and related header
 field names can be poorly implemented by clients.
