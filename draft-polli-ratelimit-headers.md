@@ -1,5 +1,5 @@
 ---
-title: Rate-Limit headers for HTTP
+title: Rate-Limit Header Fields for HTTP
 abbrev:
 docname: draft-polli-ratelimit-headers-latest
 category: std
@@ -299,7 +299,7 @@ Examples:
 ## RateLimit-Remaining {#ratelimit-remaining-header}
 
 The `RateLimit-Remaining` response header field indicates the number of
-requests left the client until the quota resets.
+requests left for the client until the quota resets.
 
 The header value is
 
@@ -315,9 +315,9 @@ Examples:
 
 ## RateLimit-Reset {#ratelimit-reset-header}
 
-The `RateLimit-Reset` response header field indicates either:
+The `RateLimit-Reset` response header field indicates either
 
-- the number of seconds to the quota resets;
+- the number of seconds until the quota resets, or
 - the timestamp when the quota resets.
 
 The header value is:
