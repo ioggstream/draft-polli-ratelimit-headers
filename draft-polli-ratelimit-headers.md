@@ -226,12 +226,11 @@ Complex throttling policies involving different windows and related header
 field names can be poorly implemented by clients.
 
 This specification provides a standard way to communicate
-quota informations to help clients avoiding running over quota.
+quota metrics to help clients avoiding running over quota.
 
 ## Time window {#time-window}
 
-Rate limit policies allow a client to issue a maximum number
-of requests in a give time window.
+Rate limit policies limits the number of acceptable requests in a given time window.
 
 The `time-window` value is in seconds, and its syntax is the following:
 
@@ -305,6 +304,13 @@ The header value is
     ratelimit-remaining-value = rlimit
     rlimit = 1*DIGIT
 
+
+Clients MUST NOT assume that a positive `RateLimit-Remaining` value imply
+any guarantee of being served.
+A low `RateLimit-Remaining` value is like a yellow traffic-light: the red light
+will arrive suddenly.
+
+
 Examples:
 
 ~~~
@@ -353,8 +359,8 @@ with the lower `RateLimit-Remaining` values.
 Under certain conditions, a server MAY artificially lower `RateLimit` headers values,
 eg. to respond to Denial of Service attacks or in case of resource saturation.
 
-Clients MUST NOT assume that respecting `RateLimit` headers values imply any
-guarantee of being served.
+
+
 
 
 
