@@ -656,6 +656,16 @@ TBD
 
    We could if there's an agreement on that ;).
 
+4. Do `RateLimit-Limit` and `RateLimit-Remaining` represent the exact number of requests
+   I can issue?
+
+   No, unless there's agreement on that.
+   As servers may weight requests, this to not impose a 1-1 mapping between
+   the "requests quota" and the "maximum number of requests".
+   For example a server can:
+
+   - count once requests like `/books/{id}`
+   - count twice search requests like `/books?author=Camilleri`
 
 5. Do we want to tie this spec to RFC 6585?
 
@@ -689,3 +699,15 @@ TBD
    Saturation conditions can be either dynamic or static: all this is out of
    the scope for the current document.
 
+9. Do a positive value of `RateLimit-Remaining` imply any service guarantee for my
+   future requests to be served?
+
+   No. The returned values were used to decide whether to serve or not *the current request*
+   and so they do not imply any guarantee that future requests will be successful.
+
+   Instead they provide informations that should be used to understand when future requests
+   have an high probablility of not being successful. A low value for `RateLimit-Remaining`
+   should be intepreted as a yellow traffic-light instead of a green one.
+
+   Servers implementing sliding window techniques or concurrency limits moreover may arbitrarily
+   lower the internal counters used to compute the remaining quota values.
