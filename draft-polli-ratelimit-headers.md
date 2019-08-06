@@ -68,9 +68,8 @@ defined in [RFC7231] to be returned in `429 Too Many Requests` or
 `503 Service Unavailable` responses.
 
 Still, there is not a standard way to communicate service quotas
-in a way to prevent 4xx or 5xx responses, so that 
-the client can throttle its requests. 
-
+so that the client can throttle its requests
+and prevent 4xx or 5xx responses.
 
 ## Current landscape of rate-limiting headers
 
@@ -82,7 +81,7 @@ The common choice is to return three headers containing:
 
 - the maximum number of allowed requests in the time window;
 - the number of remaining requests in the current window;
-- the time remaining in the current window expressed in seconds or 
+- the time remaining in the current window expressed in seconds or
   as a timestamp;
 
 Those response headers may be added by HTTP intermediaries
@@ -93,7 +92,7 @@ because the conveyed values are usually subject to response-time latency.
 
 Commonly used header field names are:
 
-- `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`; 
+- `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`;
 - `X-Rate-Limit-Limit`, `X-Rate-Limit-Remaining`, `X-Rate-Limit-Reset`.
 
 There are variants too, where the window is specified
@@ -128,7 +127,7 @@ Here are some examples:
 
 Client applications interfacing with different servers may thus
 need to process different headers,
-or the very same application interface that sits behind different 
+or the very same application interface that sits behind different
 reverse proxies may reply with different throttling headers.
 
 ## This proposal
@@ -141,8 +140,7 @@ This proposal defines syntax and semantics for the following throttling header f
 
 The behavior of `RateLimit-Reset` is compatible with the one of `Retry-After`.
 
-To mitigate issues related to clock synchronization, the preferred way to
-specify the `RateLimit-Reset` is using the seconds notation respect to the timestamp one.
+The preferred syntax for `RateLimit-Reset` is the seconds notation respect to the timestamp one.
 
 ## Goals
 
@@ -306,7 +304,7 @@ The header value is
     RateLimit-Remaining = "RateLimit-Remaining" ":" OWS ratelimit-remaining-value
     ratelimit-remaining-value = rlimit
     rlimit = 1*DIGIT
-    
+
 Examples:
 
 ~~~
@@ -324,7 +322,7 @@ The header value is:
 
     RateLimit-Reset = "RateLimit-Reset" ":" OWS ratelimit-reset-value
     ratelimit-reset-value = Retry-After
-    
+
 The value of `Retry-After` is defined in [RFC7231] appendix D and:
 
 - it SHOULD be number of seconds to delay after the quota is exhausted;
@@ -352,8 +350,8 @@ When using a quota policy involving more than one window,
 the server MUST reply with the `RateLimit` headers related to the window
 with the lower `RateLimit-Remaining` values.
 
-Under certain conditions, a server MAY artificially lower RateLimit headers values,
-eg to respond to Denial of Service attacks or in case of resource saturation.
+Under certain conditions, a server MAY artificially lower `RateLimit` headers values,
+eg. to respond to Denial of Service attacks or in case of resource saturation.
 
 Clients MUST NOT assume that respecting `RateLimit` headers values imply any
 guarantee of being served.
@@ -476,7 +474,7 @@ Response:
 
 ### Use in conjunction with custom headers
 
-The server uses two custom headers, 
+The server uses two custom headers,
 namely `acme-RateLimit-DayLimit` and `acme-RateLimit-HourLimit`
 to expose the quotas.
 
@@ -544,7 +542,7 @@ Response:
 ## Throttling does not prevent clients from issuing requests
 
 While this specification helps clients to avoid
-going over quota, it does not prevent them to 
+going over quota, it does not prevent them to
 make further requests.
 
 Servers should always implement their mechanisms
@@ -557,9 +555,9 @@ consume quota, if 401 and 403 responses count on quota
 a malicious client could get traffic informations of another
 user probing the endpoints.
 
-## Remainig requests are not granted requests
+## Remaining requests are not granted requests
 
-The values passed in `Rate-Limit-*` headers are hints given from the server
+The values passed in `RateLimit-*` headers are hints given from the server
 to the clients in order to avoid being throttled out.
 
 Clients SHOULD NOT give for granted the values returned in `RateLimit-Remaining`.
@@ -571,7 +569,7 @@ values or not serve the request anyway.
 
 When returning `RateLimit-Reset`, implementors must be aware that many throttled
 clients may come back at the very moment specified. For example, if the throttling
-interval is hourly and the retured value is something like
+interval is hourly and the returned value is something like
 
 ```
 RateLimit-Reset: Tue, 15 Nov 1994 08:00:00 GMT
@@ -579,7 +577,7 @@ RateLimit-Reset: Tue, 15 Nov 1994 08:00:00 GMT
 
 there's a high probability that all clients will show up at `08:00:00`.
 
-This could be mitigated adding some jitter to the header value. 
+This could be mitigated adding some jitter to the header value.
 
 ...
 
@@ -662,7 +660,7 @@ TBD
 5. Do we want to tie this spec to RFC 6585?
 
    [RFC6585] defines the `429` status code. We could dis-entangle this spec from that
-   one and avoing any suggestion on how to manage over-quota request.
+   one and avoiding any suggestion on which HTTP status code to use in over-quota request.
 
 6. Why not support multiple quota remaining?
 
@@ -674,6 +672,7 @@ TBD
    Yes, you can.
 
 8. Shouldn't I limit concurrency instead of request rate?
+
    You can do both. The goal of this spec is to provide guidance for
    clients in shaping their requests without being throttled out.
 
