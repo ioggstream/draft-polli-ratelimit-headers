@@ -315,9 +315,9 @@ Examples:
 
 ## RateLimit-Reset {#ratelimit-reset-header}
 
-The `RateLimit-Reset` response header field indicates either:
+The `RateLimit-Reset` response header field indicates either
 
-- the number of seconds to the quota resets;
+- the number of seconds until the quota resets, or
 - the timestamp when the quota resets.
 
 The header value is:
