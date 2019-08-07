@@ -71,7 +71,36 @@ Still, there is not a standard way to communicate service quotas
 so that the client can throttle its requests
 and prevent 4xx or 5xx responses.
 
+
+## Rate-limiting and quotas {#rate-limiting}
+
+Servers use quota mechanisms to avoid systems overload,
+to ensure an equitable distribution of computational resources
+or to enforce other policies - eg. monetization.
+
+A basic quota mechanism limits the number of acceptable
+requests in a given time window, eg. 10 requests per second.
+
+When quota is exceeded, servers usually do not serve the request
+replying instead with a `4xx` HTTP status code (eg. 429 or 403)
+or adopt more aggressive policies like dropping connections.
+
+Quotas may be enforced on different basis (eg. per user, per IP, per geographic area, ..) and
+at different levels. For example, an user may be allowed to issue:
+
+- 10 requests per second;
+- limited to 60 request per minute;
+- limited to 1000 request per hour.
+
+Moreover system metrics, statistics and heuristics can be used
+to implement more complex policies, where
+the number of acceptable request and the time window
+are computed dynamically.
+
 ## Current landscape of rate-limiting headers
+
+To help clients throttling their requests, many servers expose
+the counters used to evaluate quota policies via HTTP header fields.
 
 On the web we can find many different rate-limit headers, usually
 containing the number of allowed requests
@@ -117,7 +146,7 @@ Here are some examples:
    * seconds remaining to the window expiration
    * milliseconds remaining to the window expiration
    * seconds since UTC, in UNIX Timestamp
-   * a datetime, either HTTP-Date or {{?RFC3339}}
+   * a datetime, either `HTTP-date` [RFC7231] or {{?RFC3339}}
 
 - different headers, with the same semantic, are used by different implementers:
 
@@ -132,7 +161,7 @@ reverse proxies may reply with different throttling headers.
 
 ## This proposal
 
-This proposal defines syntax and semantics for the following throttling header fields:
+This proposal defines syntax and semantics for the following header fields:
 
 - `RateLimit-Limit`: containing the requests quota in the time window;
 - `RateLimit-Reset`: containing the time remaining in the current window, specified in seconds or as a timestamp;
@@ -141,6 +170,9 @@ This proposal defines syntax and semantics for the following throttling header f
 The behavior of `RateLimit-Reset` is compatible with the one of `Retry-After`.
 
 The preferred syntax for `RateLimit-Reset` is the seconds notation respect to the timestamp one.
+
+The header definition allows to describe complex policies, including the ones
+using multiple and variable time windows or implementing concurrency limits.
 
 ## Goals
 
@@ -199,34 +231,7 @@ by [RFC7405] along with the "#rule" extension defined in Section 7 of
 
 The term Origin is to be interpreted as described in [RFC6454] section 7.
 
-# Throttling requests {#throttling}
-
-Servers use quota mechanisms to avoid systems overload, 
-to ensure an equitable distribution of computational resources 
-or to enforce other policies - eg monetization.
-
-A basic quota mechanism limits the number of acceptable
-requests in a given time window, eg. 10 requests per second.
-
-When quota is exceeded, servers usually do not serve the request
-replying instead with a `4xx` HTTP status code (eg. 429 or 403)
-or adopt more aggressive policies like dropping connections.
-
-Quotas may be enforced on different basis (eg. per user, per IP, per geographic area, ..) and
-at different levels. For example, an user may be allowed to issue:
-
-- 10 requests per second;
-- limited to 60 request per minute;
-- limited to 1000 request per hour.
-
-Moreover system metrics, statistics and heuristics can be used
-to implement dynamic and more complex policies.
-
-Complex throttling policies involving different windows and related header
-field names can be poorly implemented by clients.
-
-This specification provides a standard way to communicate
-quota metrics to help clients avoiding running over quota.
+# Expressing rate-limit policies
 
 ## Time window {#time-window}
 
