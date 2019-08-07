@@ -293,7 +293,7 @@ The header value is
     ratelimit-limit-value-w = rlimit; "window" "=" time-window 
 
 A `ratelimit-limit-value` MAY contain a `window` parameter 
-containing the `time-window` interval.
+containing the `time-window`.
 
 If the `window` parameter is not specified, the `time-window` MUST either be:
 
@@ -409,7 +409,7 @@ eg. to respond to Denial of Service attacks or in case of resource saturation.
 ### Throttling informations in responses
 
 The client is allowed to make 99 more requests in the next 50 seconds.
-Throttling interval is communicated out-of-bound.
+The `time-window` is communicated out-of-bound or inferred by the header values.
 
 ~~~
 Request:
@@ -462,7 +462,7 @@ Response:
   RateLimit-Remaining: 100
   RateLimit-Reset: 36000
 
-  {"hello": But a"world"}
+  {"hello": "world"}
 ~~~
 
 
@@ -553,7 +553,7 @@ Response:
 ### Throttling window specified via parameter
 
 The client is allowed to make 99 more requests in the next 50 seconds.
-Throttling interval is communicated by the `window`, so we know the quota is 100 requests
+The `time-window` is communicated by the `window` parameter, so we know the quota is 100 requests
 per minute.
 
 ~~~
@@ -676,11 +676,19 @@ Clients MUST NOT give for granted the values returned in `RateLimit-Remaining`.
 In case of resource saturation, the server MAY artificially lower the returned
 values or not serve the request anyway.
 
+## Reliability of RateLimit-Reset
+
+Consider that `request-quota` may not be restored after the moment referenced by `RateLimit-Reset`,
+and the `RateLimit-Reset` value should not be considered fixed nor constant.
+
+Subsequent requests may return an increased value of `RateLimit-Reset` to limit
+concurrency or implement dynamic or adaptive throttling policies.
+
 ## Resource exhaustion and clock skew
 
 When returning `RateLimit-Reset`, implementers must be aware that many throttled
-clients may come back at the very moment specified. For example, if the throttling
-interval is hourly and the returned value is something like
+clients may come back at the very moment specified. For example, if the time-window
+is one hour and the returned value is something like
 
 ```
 RateLimit-Reset: Tue, 15 Nov 1994 08:00:00 GMT
