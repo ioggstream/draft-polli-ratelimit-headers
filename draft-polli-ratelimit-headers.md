@@ -427,103 +427,18 @@ Response:
   {"hello": "world"}
 ~~~
 
-### Throttling window specified via parameter
-
-The client is allowed to make 99 more requests in the next 50 seconds.
-Throttling interval is communicated by `delay`, so we know the quota is 100 requests
-per minute.
-
-~~~
-Request:
-
-  GET /items/123
-
-Response:
-
-  HTTP/1.1 200 Ok
-  Content-Type: application/json
-  RateLimit-Limit: 100; window=60
-  Ratelimit-Remaining: 99
-  Ratelimit-Reset: 50
-
-  {"hello": "world"}
-~~~
-
-
-### Missing Remaining informations
-
-The server does not expose `RateLimit-Remaining` informations, but
-resets the limit counter every second, and always returns the couple
-`RateLimit-Limit` and `RateLimit-Reset` expliciting that the client
-should respect 10 request per second.
-
-~~~
-Request:
-
-  GET /items/123
-
-Response:
-
-  HTTP/1.1 200 Ok
-  Content-Type: application/json
-  RateLimit-Limit: 10
-  Ratelimit-Reset: 1
-
-  {"first": "request"}
-~~~
-
-~~~
-Request:
-
-  GET /items/123
-
-Response:
-
-  HTTP/1.1 200 Ok
-  Content-Type: application/json
-  RateLimit-Limit: 10
-  Ratelimit-Reset: 1
-
-  {"second": "request"}
-~~~
-
-### Use with multiple windows
-
-Daily quota is 5000, and the client consumed 4900
-in the first 5 hours.
-Despite of the next hourly limit, the closest limit
-to reach is the daily one.
-
-The server then exposes the `RateLimit` headers to
-inform the client that:
-
-- it has only 100 request left;
-- the window will reset in 10 hours.
-
-~~~
-Request:
-
-  GET /items/123
-
-Response:
-
-  HTTP/1.1 200 Ok
-  Content-Type: application/json
-  RateLimit-Limit: 1000; window=3600, 5000; window=86400
-  RateLimit-Remaining: 100
-  RateLimit-Reset: 36000
-
-  {"hello": "world"}
-~~~
-
-### Use in conjunction with custom headers
+### Use in conjunction with custom headers {#use-with-custom-headers}
 
 The server uses two custom headers,
 namely `acme-RateLimit-DayLimit` and `acme-RateLimit-HourLimit`
-to expose the quotas.
+to expose the following policy:
 
-Daily quota is 5000, and the client consumed 4900
-in the first 5 hours.  Despite of the next hourly limit, the closest limit
+- 5000 daily request-quota;
+- 1000 hourly request-quota.
+
+The client consumed 4900 request-quota in the first 14 hours.
+
+Despite the next hourly limit of 1000 request-quota, the closest limit
 to reach is the daily one.
 
 The server then exposes the `RateLimit-*` headers to
@@ -547,7 +462,7 @@ Response:
   RateLimit-Remaining: 100
   RateLimit-Reset: 36000
 
-  {"hello": "world"}
+  {"hello": But a"world"}
 ~~~
 
 
@@ -558,12 +473,11 @@ advertising limits that are lower than the usual ones
 in case of saturation, thus increasing availability.
 
 The server adopted a basic quota policy of 100 requests
-per minute. For clarity we added the window parameter.
+per minute,
+and in case of resource exhaustion adapts the returned values
+reducing both `RateLimit-Limit` and `RateLimit-Remaining`.
 
-Due to resource exhaustion, it implemented a policy that
-adapt the values returned in the rate-limit headers,
-reducing both RateLimit-Limit and RateLimit-Remaining.
-
+After 2 seconds the server replied to 40 requests
 
 ~~~
 Request:
@@ -574,11 +488,30 @@ Response:
 
   HTTP/1.1 200 Ok
   Content-Type: application/json
-  RateLimit-Limit: 50; window=60
-  RateLimit-Remaining: 20
+  RateLimit-Limit: 100
+  RateLimit-Remaining: 60
   RateLimit-Reset: 58
 
-  {"hello": "world"}
+  {"elapsed": 2, "issued": 40}
+~~~
+
+At the subsequent 41th request - due to resource exhaustion -
+the server advertises only `RateLimit-Remaining: 20`.
+
+~~~
+Request:
+
+  GET /items/123
+
+Response:
+
+  HTTP/1.1 200 Ok
+  Content-Type: application/json
+  RateLimit-Limit: 100
+  RateLimit-Remaining: 20
+  RateLimit-Reset: 56
+
+  {"elapsed": 4, "issued": 41}
 ~~~
 
 
@@ -614,6 +547,107 @@ Response:
   }
 ~~~
 
+
+## Parameterized responses
+
+### Throttling window specified via parameter
+
+The client is allowed to make 99 more requests in the next 50 seconds.
+Throttling interval is communicated by the `window`, so we know the quota is 100 requests
+per minute.
+
+~~~
+Request:
+
+  GET /items/123
+
+Response:
+
+  HTTP/1.1 200 Ok
+  Content-Type: application/json
+  RateLimit-Limit: 100; window=60
+  Ratelimit-Remaining: 99
+  Ratelimit-Reset: 50
+
+  {"hello": "world"}
+~~~
+
+
+### Missing Remaining informations
+
+The server does not expose `RateLimit-Remaining` values, but
+resets the limit counter every second.
+
+It communicates to the client the limit of 10 request per second
+always returning the couple `RateLimit-Limit` and `RateLimit-Reset`.
+
+~~~
+Request:
+
+  GET /items/123
+
+Response:
+
+  HTTP/1.1 200 Ok
+  Content-Type: application/json
+  RateLimit-Limit: 10
+  Ratelimit-Reset: 1
+
+  {"first": "request"}
+~~~
+
+~~~
+Request:
+
+  GET /items/123
+
+Response:
+
+  HTTP/1.1 200 Ok
+  Content-Type: application/json
+  RateLimit-Limit: 10
+  Ratelimit-Reset: 1
+
+  {"second": "request"}
+~~~
+
+### Use with multiple windows
+
+This is a standardized way of describing the policy
+detailed in {{use-with-custom-headers}}:
+
+- 5000 daily request-quota;
+- 1000 hourly request-quota.
+
+The client consumed 4900 request-quota in the first 14 hours.
+
+Despite the next hourly limit of 1000 request-quota, the closest limit
+to reach is the daily one.
+
+The server then exposes the `RateLimit` headers to
+inform the client that:
+
+- it has only 100 request left;
+- the window will reset in 10 hours.
+
+~~~
+Request:
+
+  GET /items/123
+
+Response:
+
+  HTTP/1.1 200 Ok
+  Content-Type: application/json
+  RateLimit-Limit: 1000; window=3600, 5000; window=86400
+  RateLimit-Remaining: 100
+  RateLimit-Reset: 36000
+
+  {"hello": "world"}
+~~~
+
+
+
 # Security Considerations
 
 ## Throttling does not prevent clients from issuing requests
@@ -637,7 +671,7 @@ user probing the endpoints.
 The values passed in `RateLimit-*` headers are hints given from the server
 to the clients in order to avoid being throttled out.
 
-Clients SHOULD NOT give for granted the values returned in `RateLimit-Remaining`.
+Clients MUST NOT give for granted the values returned in `RateLimit-Remaining`.
 
 In case of resource saturation, the server MAY artificially lower the returned
 values or not serve the request anyway.
