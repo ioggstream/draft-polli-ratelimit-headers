@@ -305,7 +305,7 @@ If the client exceeds that limit, it MAY not be served.
 
 The header value is
 
-    RateLimit-Limit = "RateLimit-Limit" ":" OWS ratelimit-limit-value
+    RateLimit-Limit = ratelimit-limit-value
     ratelimit-limit-value = rlimit | 1#ratelimit-limit-value-w
     ratelimit-limit-value-w = rlimit; "window" "=" time-window 
 
@@ -335,8 +335,7 @@ associated to the client.
 
 The header syntax is:
 
-    RateLimit-Remaining = "RateLimit-Remaining" ":" OWS ratelimit-remaining-value
-    ratelimit-remaining-value = rlimit
+    RateLimit-Remaining = rlimit
     rlimit = 1*DIGIT
 
 
@@ -361,8 +360,7 @@ The `RateLimit-Reset` response header field indicates either
 
 The header value is:
 
-    RateLimit-Reset = "RateLimit-Reset" ":" OWS ratelimit-reset-value
-    ratelimit-reset-value = delay-seconds / HTTP-date
+    RateLimit-Reset = delay-seconds / HTTP-date
 
 A delay-seconds value is a non-negative decimal integer, representing time in seconds.
 
@@ -370,7 +368,7 @@ A delay-seconds value is a non-negative decimal integer, representing time in se
 
 The `HTTP-date` format is defined in [RFC7231] appendix D.
 
-The `ratelimit-reset-value`:
+The `RateLimit-Reset` value:
 
 - SHOULD use the `delay-seconds` format;
 - MAY use the `HTTP-date` format.
