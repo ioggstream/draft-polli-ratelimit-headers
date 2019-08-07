@@ -345,33 +345,51 @@ The `RateLimit-Reset` response header field indicates either
 The header value is:
 
     RateLimit-Reset = "RateLimit-Reset" ":" OWS ratelimit-reset-value
-    ratelimit-reset-value = Retry-After
+    ratelimit-reset-value = delay-seconds / HTTP-date
 
-The value of `Retry-After` is defined in [RFC7231] appendix D and:
+A delay-seconds value is a non-negative decimal integer, representing time in seconds.
 
-- it SHOULD be number of seconds to delay after the quota is exhausted;
-- it CAN be an HTTP-date.
+    delay-seconds  = 1*DIGIT
 
-The preferred way is to expose the number of seconds to delay to mitigate
-the risk of clock skew between client and server, and potential issues
-of thundering herd when too many clients are serviced with the same timestamp.
+The `HTTP-date` format is defined in [RFC7231] appendix D.
+
+The `ratelimit-reset-value`:
+
+- SHOULD use the `delay-seconds` format;
+- MAY use the `HTTP-date` format.
+
+The `HTTP-date` format is NOT RECOMMENDED.
+
+The preferred format is the `delay-seconds` one, because:
+
+- it does not rely on clock synchronization and is resilient to clock skew between client and server;
+- it does not require support for the `obs-date` format [RFC7231] section 7.1.1.1 used by `HTTP-date`;
+- it mitigates the risk related to thundering herd when too many clients are serviced with the same timestamp.
 
     
 Two examples of `RateLimit-Reset` use are below.
 
 ~~~
-   RateLimit-Reset: 50
-   RateLimit-Reset: Tue, 15 Nov 1994 08:12:31 GMT
-
+   RateLimit-Reset: 50                              ; preferred delay-seconds notation
+   RateLimit-Reset: Tue, 15 Nov 1994 08:12:31 GMT   ; HTTP-date notation
 ~~~
+
+The client MUST NOT give for granted that all its `request-quota` will be restored
+after the moment referenced by `RateLimit-Reset`.
+The server MAY arbitrarily alter the `RateLimit-Reset` value between subsequent requests
+eg. in case of resource saturation or to implement sliding window policies.
 
 # Providing Rate-Limit headers
 
-A server MAY use one or more of the Rate-Limit response header fields
+A server MAY use one or more `RateLimit` response header fields
 defined in this document to communicate its quota policies.
 
+The returned values represent the metrics used to evaluate the quota policy
+respect to the current request. They are an hint for the client to avoid
+exceeding quotas. Those values are not guaranteed to work on subsequent requests.
+
 A server MAY return `RateLimit` response header fields independently
-of the response status code. This includes throttled responses.
+of the response status code.  This includes throttled responses.
 
 If a response contains both the `Retry-After` and the `RateLimit-Reset` header fields,
 the value of `RateLimit-Reset` MUST be consistent with the one of `Retry-After`.
@@ -382,9 +400,6 @@ with the lower `RateLimit-Remaining` values.
 
 Under certain conditions, a server MAY artificially lower `RateLimit` headers values,
 eg. to respond to Denial of Service attacks or in case of resource saturation.
-
-
-
 
 
 # Examples
@@ -710,9 +725,14 @@ TBD
 
    To simplify enforcement of throttling policies.
 
-2. Why using delay-seconds instead of UNIX Timestamp?
+2. Why using delay-seconds instead of UNIX Timestamp? Why HTTP-date is NOT RECOMMENDED?
 
-   To align with Retry-After header, which is returned in similar contexts, eg on 429 responses.
+   Using delay-seconds permits to align with Retry-After header, which is returned in similar contexts,
+   eg on 429 responses.
+
+   As explained in [RFC7231] section 4.1.1.1 using HTTP-date requires the use of a clock synchronization
+   protocol. This may be problematic (eg. clock skew, failure of hardcoded clock synchronization servers,
+   IoT devices, ..).
 
 3. Why don't pass the trottling scope as a parameter?
 
