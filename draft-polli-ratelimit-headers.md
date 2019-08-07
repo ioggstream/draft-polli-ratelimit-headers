@@ -119,7 +119,7 @@ Here are some examples:
    * seconds since UTC, in UNIX Timestamp
    * a datetime, either HTTP-Date or {{?RFC3339}}
 
-- different headers, with the same semantic, are used by different implementors:
+- different headers, with the same semantic, are used by different implementers:
 
   * X-RateLimit-Limit and X-Rate-Limit-Limit
   * X-RateLimit-Remaining and X-Rate-Limit-Remaining
@@ -134,9 +134,9 @@ reverse proxies may reply with different throttling headers.
 
 This proposal defines syntax and semantics for the following throttling header fields:
 
-- `RateLimit-Limit`: containing the maximum number of allowed requests in the time window;
+- `RateLimit-Limit`: containing the requests quota in the time window;
 - `RateLimit-Reset`: containing the time remaining in the current window, specified in seconds or as a timestamp;
-- `RateLimit-Remaining`: containing the number of remaining requests in the current window;
+- `RateLimit-Remaining`: containing the remaining requests quota in the current window;
 
 The behavior of `RateLimit-Reset` is compatible with the one of `Retry-After`.
 
@@ -226,12 +226,11 @@ Complex throttling policies involving different windows and related header
 field names can be poorly implemented by clients.
 
 This specification provides a standard way to communicate
-quota informations to help clients avoiding running over quota.
+quota metrics to help clients avoiding running over quota.
 
 ## Time window {#time-window}
 
-Rate limit policies allow a client to issue a maximum number
-of requests in a give time window.
+Rate limit policies limit the number of acceptable requests in a given time window.
 
 The `time-window` value is in seconds, and its syntax is the following:
 
@@ -239,6 +238,25 @@ The `time-window` value is in seconds, and its syntax is the following:
     delay-seconds = 1*DIGIT
 
 Subsecond precision is not supported.
+
+## Request quota {#request-quota}
+
+The request-quota is a value associated to the maximum number of requests
+that the server is willing to accept
+from one or more clients
+on a given basis (originating IP, authenticated user, geographical, ..)
+during a time-window {{time-window}}.
+
+The `request-quota` syntax is the following:
+
+    request-quota = rlimit
+    rlimit = 1*DIGIT
+
+The `request-quota` SHOULD match the maximum number of acceptable requests.
+
+The `request-quota` MAY differ from the total number of acceptable requests
+when weight mechanisms or other server policies are implemented.
+
 
 ## Further considerations
 
@@ -263,7 +281,7 @@ are thus `X-RateLimit-Limit`, `X-RateLimit-Remaining` and `X-RateLimit-Reset`.
 ## RateLimit-Limit {#ratelimit-limit-header}
 
 The `RateLimit-Limit` response header field indicates
-the maximum number of requests that the server allocated to the client
+the `request-quota` associated to the client
 in the current time-window.
 
 If the client exceeds that limit, it MAY not be served.
@@ -273,20 +291,19 @@ The header value is
     RateLimit-Limit = "RateLimit-Limit" ":" OWS ratelimit-limit-value
     ratelimit-limit-value = rlimit | 1#ratelimit-limit-value-w
     ratelimit-limit-value-w = rlimit; "window" "=" time-window 
-    rlimit = 1*DIGIT
 
 A `ratelimit-limit-value` MAY contain a `window` parameter 
-defining the {#time-window} interval.
+containing the `time-window` interval.
 
-If the `window` parameter is not specified, the {#time-window} MUST either:
+If the `window` parameter is not specified, the `time-window` MUST either be:
 
-- inferred by the value of `RateLimit-Reset` at the moment of the reset;
-- be communicated out-of-bound (eg. in the documentation).
+- inferred by the value of `RateLimit-Reset` at the moment of the reset, or
+- communicated out-of-bound (eg. in the documentation).
 
-Quota policies using multiple quota limits MAY be returned using multiple
+Policies using multiple quota limits MAY be returned using multiple
 `ratelimit-limit-value-w` items.
 
-Examples:
+Three examples of `RateLimit-Limit` use are below.
 
 ~~~
    RateLimit-Limit: 100
@@ -296,16 +313,23 @@ Examples:
 
 ## RateLimit-Remaining {#ratelimit-remaining-header}
 
-The `RateLimit-Remaining` response header field indicates the number of
-requests left for the client until the quota resets.
+The `RateLimit-Remaining` response header field indicates the remaining `request-quota` {{request-quota}}
+associated to the client.
 
-The header value is
+The header syntax is:
 
     RateLimit-Remaining = "RateLimit-Remaining" ":" OWS ratelimit-remaining-value
     ratelimit-remaining-value = rlimit
     rlimit = 1*DIGIT
 
-Examples:
+
+Clients MUST NOT assume that a positive `RateLimit-Remaining` value imply
+any guarantee of being served.
+A low `RateLimit-Remaining` value is like a yellow traffic-light: the red light
+will arrive suddenly.
+
+
+One example of `RateLimit-Remaining` use is below.
 
 ~~~
    RateLimit-Remaining: 50
@@ -333,7 +357,7 @@ the risk of clock skew between client and server, and potential issues
 of thundering herd when too many clients are serviced with the same timestamp.
 
     
-Examples:
+Two examples of `RateLimit-Reset` use are below.
 
 ~~~
    RateLimit-Reset: 50
@@ -353,8 +377,8 @@ with the lower `RateLimit-Remaining` values.
 Under certain conditions, a server MAY artificially lower `RateLimit` headers values,
 eg. to respond to Denial of Service attacks or in case of resource saturation.
 
-Clients MUST NOT assume that respecting `RateLimit` headers values imply any
-guarantee of being served.
+
+
 
 
 
@@ -567,7 +591,7 @@ values or not serve the request anyway.
 
 ## Resource exhaustion and clock skew
 
-When returning `RateLimit-Reset`, implementors must be aware that many throttled
+When returning `RateLimit-Reset`, implementers must be aware that many throttled
 clients may come back at the very moment specified. For example, if the throttling
 interval is hourly and the returned value is something like
 
