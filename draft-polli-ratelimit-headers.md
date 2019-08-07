@@ -370,13 +370,18 @@ Two examples of `RateLimit-Reset` use are below.
 A server MAY use one or more of the Rate-Limit response header fields
 defined in this document to communicate its quota policies.
 
+A server MAY return `RateLimit` response header fields independently
+of the response status code. This includes throttled responses.
+
+If a response contains both the `Retry-After` and the `RateLimit-Reset` header fields,
+the value of `RateLimit-Reset` MUST be consistent with the one of `Retry-After`.
+
 When using a quota policy involving more than one window,
 the server MUST reply with the `RateLimit` headers related to the window
 with the lower `RateLimit-Remaining` values.
 
 Under certain conditions, a server MAY artificially lower `RateLimit` headers values,
 eg. to respond to Denial of Service attacks or in case of resource saturation.
-
 
 
 
@@ -559,6 +564,39 @@ Response:
   RateLimit-Reset: 58
 
   {"hello": "world"}
+~~~
+
+
+### Use in throttled responses
+
+A client exhausted its quota and the server throttles the request
+sending the `Retry-After` response header field.
+
+The values of `Retry-After` and `RateLimit-Reset` are consistent as they
+reference the same moment.
+
+The `429 Too Many Requests` HTTP status code is just used as an example.
+
+~~~
+Request:
+
+  GET /items/123
+
+Response:
+
+  HTTP/1.1 429 Too Many Requests
+  Content-Type: application/json
+  Date: Mon, 05 Aug 2019 09:27:00 GMT
+  Retry-After: Mon, 05 Aug 2019 09:27:05 GMT
+  RateLimit-Reset: 5
+  RateLimit-Limit: 100
+  Ratelimit-Remaining: 0
+
+  {
+    "title": "Too Many Requests",
+    "status": 429,
+    "detail": "You have exceeded your quota"
+  }
 ~~~
 
 # Security Considerations
