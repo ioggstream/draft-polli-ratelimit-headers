@@ -262,6 +262,18 @@ The `request-quota` SHOULD match the maximum number of acceptable requests.
 The `request-quota` MAY differ from the total number of acceptable requests
 when weight mechanisms or other server policies are implemented.
 
+Example: A server could
+
+- count once requests like `/books/{id}`
+- count twice search requests like `/books?author=Camilleri`
+
+so that we have the following counters
+
+~~~
+GET /books/123                  ; request-quota=4, remaining: 3, status=200
+GET /books?author=Camilleri     ; request-quota=4, remaining: 1, status=200
+GET /books?author=Eco           ; request-quota=4, remaining: 0, status=429
+~~~
 
 ## Further considerations
 
@@ -384,14 +396,24 @@ after the moment referenced by `RateLimit-Reset`.
 The server MAY arbitrarily alter the `RateLimit-Reset` value between subsequent requests
 eg. in case of resource saturation or to implement sliding window policies.
 
+
+
 # Providing Rate-Limit headers
 
 A server MAY use one or more `RateLimit` response header fields
 defined in this document to communicate its quota policies.
 
-The returned values represent the metrics used to evaluate the quota policy
-respect to the current request. They are an hint for the client to avoid
-exceeding quotas. Those values are not guaranteed to work on subsequent requests.
+The returned values apply to the metrics used to evaluate the quota policy
+respect to the current request and MAY not apply to subsequent requests.
+
+Example: a successful response with the following header fields
+
+    RateLimit-Limit: 10
+    RateLimit-Remaining: 1
+    RateLimit-Reset: 7
+
+does not imply that the next request will always be successful. Server metrics may be subject to other
+conditions like the one shown in the example from {{request-quota}}.
 
 A server MAY return `RateLimit` response header fields independently
 of the response status code.  This includes throttled responses.
@@ -399,13 +421,31 @@ of the response status code.  This includes throttled responses.
 If a response contains both the `Retry-After` and the `RateLimit-Reset` header fields,
 the value of `RateLimit-Reset` MUST be consistent with the one of `Retry-After`.
 
-When using a quota policy involving more than one window,
+When using a quota policy involving more than one time-window,
 the server MUST reply with the `RateLimit` headers related to the window
 with the lower `RateLimit-Remaining` values.
 
-Under certain conditions, a server MAY artificially lower `RateLimit` headers values,
+Under certain conditions, a server MAY artificially lower `RateLimit` headers values between subsequent requests,
 eg. to respond to Denial of Service attacks or in case of resource saturation.
 
+
+# Receiving Rate-Limit headers
+
+A client MUST process the received `RateLimit` headers.
+
+`RateLimit` headers with malformed values MAY be ignored.
+
+A client SHOULD NOT exceed the request-quota expressed in `RateLimit-Remaining` before the `time-window` expressed
+in `RateLimit-Reset`.
+
+A client MUST validate the values received in the `RateLimit` headers before using them
+and check if there are significant discrepancies
+with the expected ones.
+This includes a `RateLimit-Reset` moment too far in the future or a `request-quota` too high.
+
+If a response contains both the `RateLimit-Remaining` and `Retry-After` header fields,
+the `Retry-After` header field MUST take precedence and
+the `RateLimit-Remaining` header field MAY be ignored.
 
 # Examples
 
