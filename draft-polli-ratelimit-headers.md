@@ -290,11 +290,6 @@ This specification does not cover:
 
 The following `RateLimit` response header fields are defined
 
-Note: RFC EDITOR PLEASE DELETE THIS NOTE; Implementations of drafts
-of this specification MUST NOT use the `RateLimit` prefix. Instead
-they MUST use the `X-RateLimit` one. Draft header field names
-are thus `X-RateLimit-Limit`, `X-RateLimit-Remaining` and `X-RateLimit-Reset`.
-
 ## RateLimit-Limit {#ratelimit-limit-header}
 
 The `RateLimit-Limit` response header field indicates
