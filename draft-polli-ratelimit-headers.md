@@ -798,8 +798,8 @@ RFC EDITOR PLEASE DELETE THIS SECTION.
 
 # Acknowledgements
 
-TBD
-
+Thanks to Willi Schoenborn, Alessandro Ranellucci, Erik Wilde and Mark Nottingham for being the initial contributors
+of this specifications.
 
 # FAQ
 
