@@ -102,6 +102,9 @@ are computed dynamically.
 To help clients throttling their requests, many servers expose
 the counters used to evaluate quota policies via HTTP header fields.
 
+Those response headers may be added by HTTP intermediaries
+such as API gateways and reverse proxies.
+
 On the web we can find many different rate-limit headers, usually
 containing the number of allowed requests
 in a given time window, and when the window is reset.
@@ -112,9 +115,6 @@ The common choice is to return three headers containing:
 - the number of remaining requests in the current window;
 - the time remaining in the current window expressed in seconds or
   as a timestamp;
-
-Those response headers may be added by HTTP intermediaries
-such as API gateways and reverse proxies.
 
 Almost all rate-limit headers implementations do not use subsecond precision,
 because the conveyed values are usually subject to response-time latency.
@@ -139,6 +139,11 @@ of standard headers, because:
   same header field names;
 - header field names proliferates.
 
+Client applications interfacing with different servers may thus
+need to process different headers,
+or the very same application interface that sits behind different
+reverse proxies may reply with different throttling headers.
+
 Here are some examples:
 
 - `X-RateLimit-Remaining` references different values, depending on the implementation:
@@ -153,11 +158,6 @@ Here are some examples:
   * X-RateLimit-Limit and X-Rate-Limit-Limit
   * X-RateLimit-Remaining and X-Rate-Limit-Remaining
   * X-RateLimit-Reset and X-Rate-Limit-Reset
-
-Client applications interfacing with different servers may thus
-need to process different headers,
-or the very same application interface that sits behind different
-reverse proxies may reply with different throttling headers.
 
 ## This proposal
 
