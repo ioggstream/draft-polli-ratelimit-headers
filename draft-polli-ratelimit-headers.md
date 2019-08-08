@@ -231,16 +231,17 @@ by [RFC7405] along with the "#rule" extension defined in Section 7 of
 
 The term Origin is to be interpreted as described in [RFC6454] section 7.
 
+The "delta-seconds" rule is defined in {{!RFC7234}} section 1.2.1.
+
 # Expressing rate-limit policies
 
 ## Time window {#time-window}
 
 Rate limit policies limit the number of acceptable requests in a given time window.
 
-The `time-window` value is in seconds, and its syntax is the following:
+A time window is expressed in seconds, using the following syntax:
 
-    time-window = delay-seconds
-    delay-seconds = 1*DIGIT
+    time-window = delta-seconds
 
 Subsecond precision is not supported.
 
@@ -250,7 +251,7 @@ The request-quota is a value associated to the maximum number of requests
 that the server is willing to accept
 from one or more clients
 on a given basis (originating IP, authenticated user, geographical, ..)
-during a time-window {{time-window}}.
+during a time-window as defined in {{time-window}}.
 
 The `request-quota` syntax is the following:
 
@@ -360,22 +361,18 @@ The `RateLimit-Reset` response header field indicates either
 
 The header value is:
 
-    RateLimit-Reset = delay-seconds / HTTP-date
-
-A delay-seconds value is a non-negative decimal integer, representing time in seconds.
-
-    delay-seconds  = 1*DIGIT
+    RateLimit-Reset = delta-seconds / HTTP-date
 
 The `HTTP-date` format is defined in [RFC7231] appendix D.
 
 The `RateLimit-Reset` value:
 
-- SHOULD use the `delay-seconds` format;
+- SHOULD use the `delta-seconds` format;
 - MAY use the `HTTP-date` format.
 
 The `HTTP-date` format is NOT RECOMMENDED.
 
-The preferred format is the `delay-seconds` one, because:
+The preferred format is the `delta-seconds` one, because:
 
 - it does not rely on clock synchronization and is resilient to clock skew between client and server;
 - it does not require support for the `obs-date` format [RFC7231] section 7.1.1.1 used by `HTTP-date`;
@@ -385,7 +382,7 @@ The preferred format is the `delay-seconds` one, because:
 Two examples of `RateLimit-Reset` use are below.
 
 ~~~
-   RateLimit-Reset: 50                              ; preferred delay-seconds notation
+   RateLimit-Reset: 50                              ; preferred delta-seconds notation
    RateLimit-Reset: Tue, 15 Nov 1994 08:12:31 GMT   ; HTTP-date notation
 ~~~
 
@@ -810,10 +807,12 @@ TBD
 
    To simplify enforcement of throttling policies.
 
-2. Why using delay-seconds instead of UNIX Timestamp? Why HTTP-date is NOT RECOMMENDED?
+2. Why using delta-seconds instead of UNIX Timestamp? Why HTTP-date is NOT RECOMMENDED?
 
-   Using delay-seconds permits to align with Retry-After header, which is returned in similar contexts,
+   Using delta-seconds permits to align with Retry-After header, which is returned in similar contexts,
    eg on 429 responses.
+
+   delta-seconds as defined in [RFC7234] section 1.2.1 clarifies some parsing rules too.
 
    As explained in [RFC7231] section 4.1.1.1 using HTTP-date requires the use of a clock synchronization
    protocol. This may be problematic (eg. clock skew, failure of hardcoded clock synchronization servers,
