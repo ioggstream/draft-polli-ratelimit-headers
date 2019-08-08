@@ -99,7 +99,7 @@ are computed dynamically.
 
 ## Current landscape of rate-limiting headers
 
-To help clients throttling their requests, many servers expose
+To help clients throttling their requests, servers may expose
 the counters used to evaluate quota policies via HTTP header fields.
 
 Those response headers may be added by HTTP intermediaries
@@ -116,19 +116,6 @@ The common choice is to return three headers containing:
 - the time remaining in the current window expressed in seconds or
   as a timestamp;
 
-Almost all rate-limit headers implementations do not use subsecond precision,
-because the conveyed values are usually subject to response-time latency.
-
-Commonly used header field names are:
-
-- `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`;
-- `X-Rate-Limit-Limit`, `X-Rate-Limit-Remaining`, `X-Rate-Limit-Reset`.
-
-There are variants too, where the window is specified
-in the header field name, eg:
-
-- `x-ratelimit-limit-minute`, `x-ratelimit-limit-hour`, `x-ratelimit-limit-day`
-- `x-ratelimit-remaining-minute`, `x-ratelimit-remaining-hour`, `x-ratelimit-remaining-day`
 
 ### Interoperability issues
 
@@ -143,21 +130,6 @@ Client applications interfacing with different servers may thus
 need to process different headers,
 or the very same application interface that sits behind different
 reverse proxies may reply with different throttling headers.
-
-Here are some examples:
-
-- `X-RateLimit-Remaining` references different values, depending on the implementation:
-
-   * seconds remaining to the window expiration
-   * milliseconds remaining to the window expiration
-   * seconds since UTC, in UNIX Timestamp
-   * a datetime, either `HTTP-date` [RFC7231] or {{?RFC3339}}
-
-- different headers, with the same semantic, are used by different implementers:
-
-  * X-RateLimit-Limit and X-Rate-Limit-Limit
-  * X-RateLimit-Remaining and X-Rate-Limit-Remaining
-  * X-RateLimit-Reset and X-Rate-Limit-Reset
 
 ## This proposal
 
@@ -801,6 +773,38 @@ RFC EDITOR PLEASE DELETE THIS SECTION.
 Thanks to Willi Schoenborn, Alessandro Ranellucci, Erik Wilde and Mark Nottingham for being the initial contributors
 of this specifications.
 
+# Ratelimit headers currently used on the web
+
+RFC EDITOR PLEASE DELETE THIS SECTION.
+
+
+Commonly used header field names are:
+
+- `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`;
+- `X-Rate-Limit-Limit`, `X-Rate-Limit-Remaining`, `X-Rate-Limit-Reset`.
+
+There are variants too, where the window is specified
+in the header field name, eg:
+
+- `x-ratelimit-limit-minute`, `x-ratelimit-limit-hour`, `x-ratelimit-limit-day`
+- `x-ratelimit-remaining-minute`, `x-ratelimit-remaining-hour`, `x-ratelimit-remaining-day`
+
+Here are some interoperability issues:
+
+- `X-RateLimit-Remaining` references different values, depending on the implementation:
+
+   * seconds remaining to the window expiration
+   * milliseconds remaining to the window expiration
+   * seconds since UTC, in UNIX Timestamp
+   * a datetime, either `HTTP-date` [RFC7231] or {{?RFC3339}}
+
+- different headers, with the same semantic, are used by different implementers:
+
+  * X-RateLimit-Limit and X-Rate-Limit-Limit
+  * X-RateLimit-Remaining and X-Rate-Limit-Remaining
+  * X-RateLimit-Reset and X-Rate-Limit-Reset
+
+
 # FAQ
 
 1. Why defining standard headers for throttling?
@@ -808,30 +812,34 @@ of this specifications.
    To simplify enforcement of throttling policies.
 
 2. Why using delta-seconds instead of UNIX Timestamp? Why HTTP-date is NOT RECOMMENDED?
+   Why not using subsecond precision?
 
-   Using delta-seconds permits to align with Retry-After header, which is returned in similar contexts,
+   Using delta-seconds permits to align with `Retry-After`, which is returned in similar contexts,
    eg on 429 responses.
 
    delta-seconds as defined in [RFC7234] section 1.2.1 clarifies some parsing rules too.
 
-   As explained in [RFC7231] section 4.1.1.1 using HTTP-date requires the use of a clock synchronization
+   As explained in [RFC7231] section 4.1.1.1 using `HTTP-date` requires a clock synchronization
    protocol. This may be problematic (eg. clock skew, failure of hardcoded clock synchronization servers,
    IoT devices, ..).
+   See [Another NTP client failure story](https://community.ntppool.org/t/another-ntp-client-failure-story/1014/)
+
+   We did not use subsecond precision because almost all rate-limit headers implementations do not use it.
+   Conveyed values are subject to response-time latency. A brief discussion on the subject is
+   on the [httpwg ml](https://lists.w3.org/Archives/Public/ietf-http-wg/2019JulSep/0202.html)
+
 
 3. Why don't pass the trottling scope as a parameter?
 
-   We could if there's an agreement on that ;).
+   I'm open to suggestions. File an issue if you think it's worth ;).
 
 4. Do `RateLimit-Limit` and `RateLimit-Remaining` represent the exact number of requests
    I can issue?
 
-   No, unless there's agreement on that.
+   No, unless the server explicits that in some way.
    As servers may weight requests, this to not impose a 1-1 mapping between
    the "requests quota" and the "maximum number of requests".
-   For example a server can:
-
-   - count once requests like `/books/{id}`
-   - count twice search requests like `/books?author=Camilleri`
+   See the example in {{request-quota}}
 
 5. Do we want to tie this spec to RFC 6585?
 
