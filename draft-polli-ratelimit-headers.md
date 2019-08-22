@@ -312,7 +312,6 @@ any guarantee of being served.
 A low `RateLimit-Remaining` value is like a yellow traffic-light: the red light
 will arrive suddenly.
 
-
 One example of `RateLimit-Remaining` use is below.
 
 ~~~
@@ -415,7 +414,7 @@ the `RateLimit-Remaining` header field MAY be ignored.
 
 ### Throttling informations in responses
 
-The client is allowed to make 99 more requests in the next 50 seconds.
+The client exhausted its request-quota for the next 50 seconds.
 The `time-window` is communicated out-of-bound or inferred by the header values.
 
 ~~~
@@ -428,7 +427,7 @@ Response:
   HTTP/1.1 200 Ok
   Content-Type: application/json
   RateLimit-Limit: 100
-  Ratelimit-Remaining: 99
+  Ratelimit-Remaining: 0
   Ratelimit-Reset: 50
 
   {"hello": "world"}
