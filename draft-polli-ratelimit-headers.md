@@ -143,7 +143,7 @@ The behavior of `RateLimit-Reset` is compatible with the one of `Retry-After`.
 
 The preferred syntax for `RateLimit-Reset` is the seconds notation respect to the timestamp one.
 
-The header definition allows to describe complex policies, including the ones
+The header fields definition allows to describe complex policies, including the ones
 using multiple and variable time windows or implementing concurrency limits.
 
 ## Goals
@@ -558,9 +558,8 @@ Response:
 
 ### Throttling window specified via parameter
 
-The client is allowed to make 99 more requests in the next 50 seconds.
-The `time-window` is communicated by the `window` parameter, so we know the quota is 100 requests
-per minute.
+The client has 99 request-quotas left for the next 50 seconds.
+The `time-window` is communicated by the `window` parameter, so we know the minute request-quota is 100.
 
 ~~~
 Request:
