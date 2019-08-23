@@ -267,33 +267,39 @@ The following `RateLimit` response header fields are defined
 
 The `RateLimit-Limit` response header field indicates
 the `request-quota` associated to the client
-in the current time-window.
+in the current `time-window`.
 
 If the client exceeds that limit, it MAY not be served.
 
 The header value is
 
-    RateLimit-Limit = ratelimit-limit-value
-    ratelimit-limit-value = rlimit | 1#ratelimit-limit-value-w
-    ratelimit-limit-value-w = rlimit; "window" "=" time-window 
+    RateLimit-Limit = expiring-limit [, 1#quota-policy ]
+    quota-policy = rlimit; "window" "=" time-window
+    expiring-limit = rlimit
 
-A `ratelimit-limit-value` MAY contain a `window` parameter 
-containing the `time-window`.
+The `expiring-limit` value MUST be set to the `request-quota` that is closer to reach its limit.
 
-If the `window` parameter is not specified, the `time-window` MUST either be:
+~~~
+RateLimit-Limit: 100
+~~~
+
+A `time-window` associated to `expiring-limit` can be communicated
+via an optional `quota-policy` value, like shown in the following example
+
+~~~
+   RateLimit-Limit: 100, 100; window=10
+~~~
+
+If the `expiring-limit` is not associated to a `time-window`, the `time-window` MUST either be:
 
 - inferred by the value of `RateLimit-Reset` at the moment of the reset, or
 - communicated out-of-bound (eg. in the documentation).
 
 Policies using multiple quota limits MAY be returned using multiple
-`ratelimit-limit-value-w` items.
-
-Three examples of `RateLimit-Limit` use are below.
+`quota-policy` items, like shown in the following example:
 
 ~~~
-   RateLimit-Limit: 100
-   RateLimit-Limit: 100; window=10
-   RateLimit-Limit: 10; window=1, 50; window=60, 1000; window=3600, 5000; window=86400
+   RateLimit-Limit: 10, 10; window=1, 50; window=60, 1000; window=3600, 5000; window=86400
 ~~~
 
 ## RateLimit-Remaining {#ratelimit-remaining-header}
@@ -571,13 +577,44 @@ Response:
 
   HTTP/1.1 200 Ok
   Content-Type: application/json
-  RateLimit-Limit: 100; window=60
+  RateLimit-Limit: 100, 100; window=60
   Ratelimit-Remaining: 99
   Ratelimit-Reset: 50
 
   {"hello": "world"}
 ~~~
 
+### Dynamic limits with parameterized windows
+
+The quota policy conveyed by `RateLimit-Limit` states that
+the server accepts 100 requests per minute.
+
+Due to resource exhaustion, the server artificially lowers
+the actual limits returned in the throttling headers.
+
+The current quota policy advertises then
+only 9 requests in the next 50 seconds.
+
+Note that the server could have lowered even the other
+values in `RateLimit-Limit`: this specification
+does not mandate any relation between the header values
+in subsequent responses.
+
+~~~
+Request:
+
+  GET /items/123
+
+Response:
+
+  HTTP/1.1 200 Ok
+  Content-Type: application/json
+  RateLimit-Limit: 10, 100; window=60
+  Ratelimit-Remaining: 9
+  Ratelimit-Reset: 50
+
+  {"hello": "world"}
+~~~
 
 ### Missing Remaining informations
 
@@ -634,7 +671,8 @@ The server then exposes the `RateLimit` headers to
 inform the client that:
 
 - it has only 100 request left;
-- the window will reset in 10 hours.
+- the window will reset in 10 hours;
+- the `expiring-limit` is 5000.
 
 ~~~
 Request:
@@ -645,7 +683,7 @@ Response:
 
   HTTP/1.1 200 Ok
   Content-Type: application/json
-  RateLimit-Limit: 1000; window=3600, 5000; window=86400
+  RateLimit-Limit: 5000, 1000; window=3600, 5000; window=86400
   RateLimit-Remaining: 100
   RateLimit-Reset: 36000
 
