@@ -274,8 +274,8 @@ If the client exceeds that limit, it MAY not be served.
 The header value is
 
     RateLimit-Limit = expiring-limit [, 1#quota-policy ]
-    quota-policy = rlimit; "window" "=" time-window
-    expiring-limit = rlimit
+    quota-policy = request-quota; "window" "=" time-window
+    expiring-limit = request-quota
 
 The `expiring-limit` value MUST be set to the `request-quota` that is closer to reach its limit.
 
@@ -309,14 +309,12 @@ associated to the client.
 
 The header syntax is:
 
-    RateLimit-Remaining = rlimit
-    rlimit = 1*DIGIT
-
+    RateLimit-Remaining = request-quota
 
 Clients MUST NOT assume that a positive `RateLimit-Remaining` value imply
 any guarantee of being served.
 A low `RateLimit-Remaining` value is like a yellow traffic-light: the red light
-will arrive suddenly.
+may arrive suddenly.
 
 One example of `RateLimit-Remaining` use is below.
 
