@@ -585,7 +585,7 @@ Response:
   {"hello": "world"}
 ~~~
 
-### Dynamic limits with parameterized windos
+### Dynamic limits with parameterized windows
 
 The quota policy conveyed by `RateLimit-Limit` states that
 the server accepts 100 requests per minute.
