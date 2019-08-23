@@ -233,7 +233,10 @@ The `request-quota` syntax is the following:
 The `request-quota` SHOULD match the maximum number of acceptable requests.
 
 The `request-quota` MAY differ from the total number of acceptable requests
-when weight mechanisms or other server policies are implemented.
+when weight mechanisms, bursts, or other server policies are implemented.
+
+If the `request-quota` does not match the maximum number of acceptable requests
+the relation with that SHOULD BE communicated out-of-bound.
 
 Example: A server could
 
@@ -313,6 +316,7 @@ The header syntax is:
 
 Clients MUST NOT assume that a positive `RateLimit-Remaining` value imply
 any guarantee of being served.
+
 A low `RateLimit-Remaining` value is like a yellow traffic-light: the red light
 may arrive suddenly.
 
@@ -911,7 +915,9 @@ Here are some interoperability issues:
 
    Instead they provide informations that should be used to understand when future requests
    have an high probablility of not being successful. A low value for `RateLimit-Remaining`
-   should be intepreted as a yellow traffic-light instead of a green one.
+   should be intepreted as a yellow traffic-light for either
+   the number of requests issued in the time-window
+   or the request throughput.
 
    Servers implementing sliding window techniques or concurrency limits moreover may arbitrarily
    lower the internal counters used to compute the remaining quota values.
