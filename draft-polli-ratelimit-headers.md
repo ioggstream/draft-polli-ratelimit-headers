@@ -414,9 +414,9 @@ in `RateLimit-Reset`.
 
 A client MAY still probe the server if the `RateLimit-Reset` is considered too high.
 
-If a response contains both the `RateLimit-Remaining` and `Retry-After` header fields,
+If a response contains both the `RateLimit-Reset` and `Retry-After` header fields,
 the `Retry-After` header field MUST take precedence and
-the `RateLimit-Remaining` header field MAY be ignored.
+the `RateLimit-Reset` header field MAY be ignored.
 
 # Examples
 
