@@ -253,7 +253,7 @@ GET /books?author=Eco           ; request-quota=4, remaining: 0, status=429
 
 ## Quota policy {#quota-policy}
 
-A quota policy is described in the following format
+This specification allows describing a quota policy with the following syntax:
 
     quota-policy = request-quota; "window" "=" time-window *( OWS ";" OWS quota-comment)
     quota-comment = token "=" (token / quoted-string)
