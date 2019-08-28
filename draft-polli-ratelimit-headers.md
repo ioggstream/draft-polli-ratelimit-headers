@@ -402,15 +402,17 @@ eg. to respond to Denial of Service attacks or in case of resource saturation.
 
 A client MUST process the received `RateLimit` headers.
 
-`RateLimit` headers with malformed values MAY be ignored.
-
-A client SHOULD NOT exceed the request-quota expressed in `RateLimit-Remaining` before the `time-window` expressed
-in `RateLimit-Reset`.
-
 A client MUST validate the values received in the `RateLimit` headers before using them
 and check if there are significant discrepancies
 with the expected ones.
 This includes a `RateLimit-Reset` moment too far in the future or a `request-quota` too high.
+
+Malformed `RateLimit` headers MAY be ignored.
+
+A client SHOULD NOT exceed the request-quota expressed in `RateLimit-Remaining` before the `time-window` expressed
+in `RateLimit-Reset`.
+
+A client MAY still probe the server if the `RateLimit-Reset` is considered too high.
 
 If a response contains both the `RateLimit-Remaining` and `Retry-After` header fields,
 the `Retry-After` header field MUST take precedence and
@@ -744,7 +746,21 @@ there's a high probability that all clients will show up at `08:00:00`.
 
 This could be mitigated adding some jitter to the header value.
 
-...
+
+## Denial of Service
+
+`RateLimit` header fields may assume unexpected values by chance or purpose.
+For example, an excessively high `RateLimit-Remaining` value may be:
+
+- used by a malicious intermediary to trigger a Denial of Service attack
+  or consume client resources boosting its requests;
+- passed by a misconfigured server;
+
+or an high `RateLimit-Reset` value could inhibit clients to contact
+the server.
+
+Clients MUST validate the received values to mitigate those risks.
+
 
 # IANA Considerations
 
