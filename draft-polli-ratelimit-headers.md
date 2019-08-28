@@ -225,10 +225,10 @@ from one or more clients
 on a given basis (originating IP, authenticated user, geographical, ..)
 during a time-window as defined in {{time-window}}.
 
-The `request-quota` syntax is the following:
+The `request-quota` is expressed in `quota-units` and has the following syntax:
 
-    request-quota = rlimit
-    rlimit = 1*DIGIT
+    request-quota = quota-units
+    quota-units = 1*DIGIT
 
 The `request-quota` SHOULD match the maximum number of acceptable requests.
 
@@ -236,7 +236,7 @@ The `request-quota` MAY differ from the total number of acceptable requests
 when weight mechanisms, bursts, or other server policies are implemented.
 
 If the `request-quota` does not match the maximum number of acceptable requests
-the relation with that SHOULD BE communicated out-of-bound.
+the relation with that SHOULD be communicated out-of-bound.
 
 Example: A server could
 
@@ -250,6 +250,29 @@ GET /books/123                  ; request-quota=4, remaining: 3, status=200
 GET /books?author=Camilleri     ; request-quota=4, remaining: 1, status=200
 GET /books?author=Eco           ; request-quota=4, remaining: 0, status=429
 ~~~
+
+## Quota policy {#quota-policy}
+
+A quota policy is described in the following format
+
+    quota-policy = request-quota; "window" "=" time-window *( OWS ";" OWS quota-comment)
+    quota-comment = token "=" (token / quoted-string)
+
+
+An example policy of 100 quota-units per minute.
+
+~~~
+100; window=60
+~~~
+
+Two examples of providing further details via custom parameters
+in `quota-comments`.
+
+~~~
+100; window=60;comment="fixed window"
+12; window=1; burst=1000;policy="leaky bucket"
+~~~
+
 
 ## Further considerations
 
@@ -277,10 +300,11 @@ If the client exceeds that limit, it MAY not be served.
 The header value is
 
     RateLimit-Limit = expiring-limit [, 1#quota-policy ]
-    quota-policy = request-quota; "window" "=" time-window
     expiring-limit = request-quota
 
 The `expiring-limit` value MUST be set to the `request-quota` that is closer to reach its limit.
+
+The `quota-policy` is defined in {{quota-policy}}.
 
 ~~~
 RateLimit-Limit: 100
@@ -299,20 +323,21 @@ If the `expiring-limit` is not associated to a `time-window`, the `time-window` 
 - communicated out-of-bound (eg. in the documentation).
 
 Policies using multiple quota limits MAY be returned using multiple
-`quota-policy` items, like shown in the following example:
+`quota-policy` items, like shown in the following two examples:
 
 ~~~
    RateLimit-Limit: 10, 10; window=1, 50; window=60, 1000; window=3600, 5000; window=86400
+   RateLimit-Limit: 10, 10; window=1;burst=1000, 1000; window=3600
 ~~~
 
 ## RateLimit-Remaining {#ratelimit-remaining-header}
 
-The `RateLimit-Remaining` response header field indicates the remaining `request-quota` {{request-quota}}
+The `RateLimit-Remaining` response header field indicates the remaining `quota-units` defined in {{request-quota}}
 associated to the client.
 
 The header syntax is:
 
-    RateLimit-Remaining = request-quota
+    RateLimit-Remaining = quota-units
 
 Clients MUST NOT assume that a positive `RateLimit-Remaining` value imply
 any guarantee of being served.
@@ -409,7 +434,7 @@ This includes a `RateLimit-Reset` moment too far in the future or a `request-quo
 
 Malformed `RateLimit` headers MAY be ignored.
 
-A client SHOULD NOT exceed the request-quota expressed in `RateLimit-Remaining` before the `time-window` expressed
+A client SHOULD NOT exceed the quota-units expressed in `RateLimit-Remaining` before the `time-window` expressed
 in `RateLimit-Reset`.
 
 A client MAY still probe the server if the `RateLimit-Reset` is considered too high.
@@ -449,12 +474,12 @@ The server uses two custom headers,
 namely `acme-RateLimit-DayLimit` and `acme-RateLimit-HourLimit`
 to expose the following policy:
 
-- 5000 daily request-quota;
-- 1000 hourly request-quota.
+- 5000 daily quota-units;
+- 1000 hourly quota-units.
 
-The client consumed 4900 request-quota in the first 14 hours.
+The client consumed 4900 quota-units in the first 14 hours.
 
-Despite the next hourly limit of 1000 request-quota, the closest limit
+Despite the next hourly limit of 1000 quota-units, the closest limit
 to reach is the daily one.
 
 The server then exposes the `RateLimit-*` headers to
@@ -568,8 +593,8 @@ Response:
 
 ### Throttling window specified via parameter
 
-The client has 99 request-quotas left for the next 50 seconds.
-The `time-window` is communicated by the `window` parameter, so we know the minute request-quota is 100.
+The client has 99 `quota-units` left for the next 50 seconds.
+The `time-window` is communicated by the `window` parameter, so we know the throughput is 100 `quota-units` per minute.
 
 ~~~
 Request:
@@ -662,18 +687,18 @@ Response:
 This is a standardized way of describing the policy
 detailed in {{use-with-custom-headers}}:
 
-- 5000 daily request-quota;
-- 1000 hourly request-quota.
+- 5000 daily quota-units;
+- 1000 hourly quota-units.
 
-The client consumed 4900 request-quota in the first 14 hours.
+The client consumed 4900 quota-units in the first 14 hours.
 
-Despite the next hourly limit of 1000 request-quota, the closest limit
+Despite the next hourly limit of 1000 quota-units, the closest limit
 to reach is the daily one.
 
 The server then exposes the `RateLimit` headers to
 inform the client that:
 
-- it has only 100 request left;
+- it has only 100 quota-units left;
 - the window will reset in 10 hours;
 - the `expiring-limit` is 5000.
 
@@ -936,3 +961,14 @@ Here are some interoperability issues:
 
    Servers implementing sliding window techniques or concurrency limits moreover may arbitrarily
    lower the internal counters used to compute the remaining quota values.
+
+10. Is the quota-policy definition {{quota-policy}} too complex?
+
+    The only runtime value that should be usable is the first element of the list,
+    so for the following header:
+
+    ```
+    RateLimit-Limit: 100, 100; window=60;burst=1000;comment="sliding window", 5000;window=3600;burst=0;comment="fixed window"
+    ```
+
+    the actual value referencing the lowest limit is `100`
