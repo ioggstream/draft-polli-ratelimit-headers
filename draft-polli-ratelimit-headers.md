@@ -964,11 +964,19 @@ Here are some interoperability issues:
 
 10. Is the quota-policy definition {{quota-policy}} too complex?
 
-    The only runtime value that should be usable is the first element of the list,
-    so for the following header:
+    The key runtime value is the first element of the list, the others are informative.
+    So for the following header:
 
     ```
     RateLimit-Limit: 100, 100; window=60;burst=1000;comment="sliding window", 5000;window=3600;burst=0;comment="fixed window"
     ```
 
-    the actual value referencing the lowest limit is `100`
+    the key value is the one referencing the lowest limit: `100`
+    You can always return the simplest form of the 3 headers
+
+    ```
+    RateLimit-Limit: 100
+    RateLimit-Remaining: 50
+    RateLimit-Reset: 60
+    ```
+
