@@ -708,6 +708,9 @@ to prevent resource exhaustion.
 
 ## Information disclosure
 
+Servers should not disclose operational capacity informations that
+can be used to saturate server resources.
+
 While this specification does not mandate whether non 2xx requests
 consume quota, if 401 and 403 responses count on quota
 a malicious client could get traffic informations of another
