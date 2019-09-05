@@ -170,9 +170,7 @@ The goals do not include:
     Origin [RFC6454] section 7.
 
   Response status code:
-  : This specification does not cover the response status code
-    that may be used in throttled responses, nor ties the rate-limit
-    headers to any HTTP status code. They may be returned in both
+  : The rate-limit headers may be returned in both
     Successful and non Successful responses.
     Moreover this specification does not cover whether non Successful
     responses count on quota usage.
@@ -724,11 +722,10 @@ Response:
 
 ## Throttling does not prevent clients from issuing requests
 
-While this specification helps clients to avoid
-going over quota, it does not prevent them to
-make further requests.
+This specification does not prevent clients to
+make over-quota requests.
 
-Servers should always implement their mechanisms
+Servers should always implement mechanisms
 to prevent resource exhaustion.
 
 ## Information disclosure
@@ -761,9 +758,9 @@ concurrency or implement dynamic or adaptive throttling policies.
 
 ## Resource exhaustion and clock skew
 
-When returning `RateLimit-Reset`, implementers must be aware that many throttled
-clients may come back at the very moment specified. For example, if the time-window
-is one hour and the returned value is something like
+Implementers returning `RateLimit-Reset` must be aware that many throttled
+clients may come back at the very moment specified.
+For example, when returning
 
 ```
 RateLimit-Reset: Tue, 15 Nov 1994 08:00:00 GMT
