@@ -343,28 +343,27 @@ The `RateLimit-Reset` response header field indicates either
 
 The header value is:
 
-    RateLimit-Reset = delta-seconds / HTTP-date
+    RateLimit-Reset = delta-seconds / IMF-fixdate
 
-The `HTTP-date` format is defined in [RFC7231] appendix D.
+The `IMF-fixdate` format is defined in [RFC7231] appendix D.
 
 The `RateLimit-Reset` value:
 
 - SHOULD use the `delta-seconds` format;
-- MAY use the `HTTP-date` format.
+- MAY use the `IMF-fixdate` format.
 
-The `HTTP-date` format is NOT RECOMMENDED.
+The `IMF-fixdate` format is NOT RECOMMENDED.
 
 The preferred format is the `delta-seconds` one, because:
 
 - it does not rely on clock synchronization and is resilient to clock skew between client and server;
-- it mitigates the risk related to thundering herd when too many clients are serviced with the same timestamp;
-- it does not require support for the `obs-date` format [RFC7231] section 7.1.1.1 used by `HTTP-date`.
+- it mitigates the risk related to thundering herd when too many clients are serviced with the same timestamp.
 
 Two examples of `RateLimit-Reset` use are below.
 
 ~~~
    RateLimit-Reset: 50                              ; preferred delta-seconds notation
-   RateLimit-Reset: Tue, 15 Nov 1994 08:12:31 GMT   ; HTTP-date notation
+   RateLimit-Reset: Tue, 15 Nov 1994 08:12:31 GMT   ; IMF-fixdate notation
 ~~~
 
 The client MUST NOT give for granted that all its `request-quota` will be restored
@@ -858,7 +857,7 @@ Here are some interoperability issues:
    * seconds remaining to the window expiration
    * milliseconds remaining to the window expiration
    * seconds since UTC, in UNIX Timestamp
-   * a datetime, either `HTTP-date` [RFC7231] or {{?RFC3339}}
+   * a datetime, either `IMF-fixdate` [RFC7231] or {{?RFC3339}}
 
 - different headers, with the same semantic, are used by different implementers:
 
@@ -902,7 +901,7 @@ At this point you should stop increasing your request rate.
 
    I'm open to suggestions. File an issue if you think it's worth ;).
 
-5. Why using delta-seconds instead of UNIX Timestamp? Why HTTP-date is NOT RECOMMENDED?
+5. Why using delta-seconds instead of UNIX Timestamp? Why IMF-fixdate is NOT RECOMMENDED?
    Why not using subsecond precision?
 
    Using delta-seconds permits to align with `Retry-After`, which is returned in similar contexts,
@@ -910,7 +909,7 @@ At this point you should stop increasing your request rate.
 
    delta-seconds as defined in [RFC7234] section 1.2.1 clarifies some parsing rules too.
 
-   As explained in [RFC7231] section 4.1.1.1 using `HTTP-date` requires a clock synchronization
+   As explained in [RFC7231] section 4.1.1.1 using `IMF-fixdate` requires a clock synchronization
    protocol. This may be problematic (eg. clock skew, failure of hardcoded clock synchronization servers,
    IoT devices, ..).
    See [Another NTP client failure story](https://community.ntppool.org/t/another-ntp-client-failure-story/1014/)
