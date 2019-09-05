@@ -172,20 +172,19 @@ The goals do not include:
   Response status code:
   : The rate-limit headers may be returned in both
     Successful and non Successful responses.
-    Moreover this specification does not cover whether non Successful
+    This specification does not cover whether non Successful
     responses count on quota usage.
 
   Throttling policy:
-  : This specification does not impose any throttling policy, but
-    provides a mechanism for communicating quota metrics.
+  : This specification does not impose any throttling policy.
     The values published in the headers, including the window size,
     can be statically or dynamically evaluated.
     Moreover a different weight may be assigned to different requests.
 
   Service Level Agreement:
-  : This specification allows a server to provide quota hints to the clients.
-    Those hints do not imply that respectful clients will not be throttled
-    out or denied service under certain circumstances.
+  : Quota hints provided by the headers do not imply
+    any service guarantee nor that respectful client
+    will be denied service under certain circumstances.
 
 
 ## Notational Conventions
@@ -885,6 +884,19 @@ Here are some interoperability issues:
 
    To simplify enforcement of throttling policies.
 
+7. Can I use RateLimit-\* in throttled responses (eg with status code 429)?
+
+   Yes, you can.
+
+5. Are those specs tied to RFC 6585?
+
+   No. [RFC6585] defines the `429` status code and we use it just as an example of a throttled request,
+   that could instead use even 403 or whatever status code.
+
+3. Why don't pass the trottling scope as a parameter?
+
+   I'm open to suggestions. File an issue if you think it's worth ;).
+
 2. Why using delta-seconds instead of UNIX Timestamp? Why HTTP-date is NOT RECOMMENDED?
    Why not using subsecond precision?
 
@@ -903,39 +915,19 @@ Here are some interoperability issues:
    on the [httpwg ml](https://lists.w3.org/Archives/Public/ietf-http-wg/2019JulSep/0202.html)
 
 
-3. Why don't pass the trottling scope as a parameter?
-
-   I'm open to suggestions. File an issue if you think it's worth ;).
-
-4. Do `RateLimit-Limit` and `RateLimit-Remaining` represent the exact number of requests
-   I can issue?
-
-   No, unless the server explicits that in some way.
-   As servers may weight requests, this to not impose a 1-1 mapping between
-   the "requests quota" and the "maximum number of requests".
-   See the example in {{request-quota}}
-
-5. Do we want to tie this spec to RFC 6585?
-
-   [RFC6585] defines the `429` status code. We could dis-entangle this spec from that
-   one and avoiding any suggestion on which HTTP status code to use in over-quota request.
-
 6. Why not support multiple quota remaining?
 
    While this might be of some value, my experience suggests that overly-complex quota implementations
    results in lower effectiveness of this policy. This spec allows the client to easily focusing on
    RateLimit-Remaining and RateLimit-Reset.
 
-7. Can I use RateLimit-\* in throttled responses (eg together with 429)?
-   Yes, you can.
-
 8. Shouldn't I limit concurrency instead of request rate?
 
    You can do both. The goal of this spec is to provide guidance for
    clients in shaping their requests without being throttled out.
 
-   Usually, limiting concurrency results in unserviced client requests,
-   which is something you may want to avoid.
+   Limiting concurrency results in unserviced client requests,
+   which is something we want to avoid.
 
    A standard way to limit concurrency is to return 503 + Retry-After
    in case of resource saturation (eg. thrashing, connection queues too long,
