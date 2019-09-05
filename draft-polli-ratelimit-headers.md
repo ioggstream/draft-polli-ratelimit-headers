@@ -1,5 +1,5 @@
 ---
-title: Rate-Limit Header Fields for HTTP
+title: RateLimit Header Fields for HTTP
 abbrev:
 docname: draft-polli-ratelimit-headers-latest
 category: std
@@ -64,7 +64,7 @@ requires an explicit way of communicating service status and
 usage quotas.
 
 This was partially addressed with the `Retry-After` header field
-defined in [RFC7231] to be returned in `429 Too Many Requests` or 
+defined in [RFC7231] to be returned in `429 Too Many Requests` or
 `503 Service Unavailable` responses.
 
 Still, there is not a standard way to communicate service quotas
@@ -136,15 +136,15 @@ reverse proxies may reply with different throttling headers.
 This proposal defines syntax and semantics for the following header fields:
 
 - `RateLimit-Limit`: containing the requests quota in the time window;
-- `RateLimit-Reset`: containing the time remaining in the current window, specified in seconds or as a timestamp;
 - `RateLimit-Remaining`: containing the remaining requests quota in the current window;
+- `RateLimit-Reset`: containing the time remaining in the current window, specified in seconds or as a timestamp;
 
 The behavior of `RateLimit-Reset` is compatible with the one of `Retry-After`.
 
 The preferred syntax for `RateLimit-Reset` is the seconds notation respect to the timestamp one.
 
 The header fields definition allows to describe complex policies, including the ones
-using multiple and variable time windows or implementing concurrency limits.
+using multiple and variable time windows and dynamic quotas, or implementing concurrency limits.
 
 ## Goals
 
@@ -170,24 +170,19 @@ The goals do not include:
     Origin [RFC6454] section 7.
 
   Response status code:
-  : This specification does not cover the response status code
-    that may be used in throttled responses, nor ties the rate-limit
-    headers to any HTTP status code. They may be returned in both
+  : The rate-limit headers may be returned in both
     Successful and non Successful responses.
-    Moreover this specification does not cover whether non Successful
+    This specification does not cover whether non Successful
     responses count on quota usage.
 
   Throttling policy:
-  : This specification does not impose any throttling policy, but
-    provides a mechanism for communicating quota metrics.
+  : This specification does not mandate a specific throttling policy.
     The values published in the headers, including the window size,
     can be statically or dynamically evaluated.
-    Moreover a different weight may be assigned to different requests.
 
   Service Level Agreement:
-  : This specification allows a server to provide quota hints to the clients.
-    Those hints do not imply that respectful clients will not be throttled
-    out or denied service under certain circumstances.
+  : Conveyed quota hints do not imply any service guarantee.
+    Server is free to throttle respectful clients under certain circumstances.
 
 
 ## Notational Conventions
@@ -223,7 +218,7 @@ The request-quota is a value associated to the maximum number of requests
 that the server is willing to accept
 from one or more clients
 on a given basis (originating IP, authenticated user, geographical, ..)
-during a time-window as defined in {{time-window}}.
+during a `time-window` as defined in {{time-window}}.
 
 The `request-quota` is expressed in `quota-units` and has the following syntax:
 
@@ -262,28 +257,16 @@ This specification allows describing a quota policy with the following syntax:
 An example policy of 100 quota-units per minute.
 
 ~~~
-100; window=60
+100;window=60
 ~~~
 
 Two examples of providing further details via custom parameters
 in `quota-comments`.
 
 ~~~
-100; window=60;comment="fixed window"
-12; window=1; burst=1000;policy="leaky bucket"
+100;window=60;comment="fixed window"
+12;window=1; burst=1000;policy="leaky bucket"
 ~~~
-
-
-## Further considerations
-
-This specification does not cover:
-
--  the scope of the request throttling,
-   that may be the given request-target, its parent path or the whole Origin;
--  whether non 2xx responses contribute or not to reach the quota limits;
--  which strategies to use to implement your quota policy.
-
-...
 
 # Header Specifications
 
@@ -304,7 +287,7 @@ The header value is
 
 The `expiring-limit` value MUST be set to the `request-quota` that is closer to reach its limit.
 
-The `quota-policy` is defined in {{quota-policy}}.
+The `quota-policy` is defined in {{quota-policy}}, and its values are informative.
 
 ~~~
 RateLimit-Limit: 100
@@ -314,7 +297,7 @@ A `time-window` associated to `expiring-limit` can be communicated
 via an optional `quota-policy` value, like shown in the following example
 
 ~~~
-   RateLimit-Limit: 100, 100; window=10
+   RateLimit-Limit: 100, 100;window=10
 ~~~
 
 If the `expiring-limit` is not associated to a `time-window`, the `time-window` MUST either be:
@@ -326,8 +309,8 @@ Policies using multiple quota limits MAY be returned using multiple
 `quota-policy` items, like shown in the following two examples:
 
 ~~~
-   RateLimit-Limit: 10, 10; window=1, 50; window=60, 1000; window=3600, 5000; window=86400
-   RateLimit-Limit: 10, 10; window=1;burst=1000, 1000; window=3600
+   RateLimit-Limit: 10, 10;window=1, 50;window=60, 1000;window=3600, 5000;window=86400
+   RateLimit-Limit: 10, 10;window=1;burst=1000, 1000;window=3600
 ~~~
 
 ## RateLimit-Remaining {#ratelimit-remaining-header}
@@ -339,8 +322,8 @@ The header syntax is:
 
     RateLimit-Remaining = quota-units
 
-Clients MUST NOT assume that a positive `RateLimit-Remaining` value imply
-any guarantee of being served.
+Clients MUST NOT assume that a positive `RateLimit-Remaining` value is
+a guarantee of being served.
 
 A low `RateLimit-Remaining` value is like a yellow traffic-light: the red light
 may arrive suddenly.
@@ -374,10 +357,9 @@ The `HTTP-date` format is NOT RECOMMENDED.
 The preferred format is the `delta-seconds` one, because:
 
 - it does not rely on clock synchronization and is resilient to clock skew between client and server;
-- it does not require support for the `obs-date` format [RFC7231] section 7.1.1.1 used by `HTTP-date`;
-- it mitigates the risk related to thundering herd when too many clients are serviced with the same timestamp.
+- it mitigates the risk related to thundering herd when too many clients are serviced with the same timestamp;
+- it does not require support for the `obs-date` format [RFC7231] section 7.1.1.1 used by `HTTP-date`.
 
-    
 Two examples of `RateLimit-Reset` use are below.
 
 ~~~
@@ -391,14 +373,13 @@ The server MAY arbitrarily alter the `RateLimit-Reset` value between subsequent 
 eg. in case of resource saturation or to implement sliding window policies.
 
 
-
-# Providing Rate-Limit headers
+# Providing RateLimit headers
 
 A server MAY use one or more `RateLimit` response header fields
 defined in this document to communicate its quota policies.
 
-The returned values apply to the metrics used to evaluate the quota policy
-respect to the current request and MAY not apply to subsequent requests.
+The returned values refers to the metrics used to evaluate if the current request
+respects the quota policy and MAY not apply to subsequent requests.
 
 Example: a successful response with the following header fields
 
@@ -406,7 +387,7 @@ Example: a successful response with the following header fields
     RateLimit-Remaining: 1
     RateLimit-Reset: 7
 
-does not imply that the next request will always be successful. Server metrics may be subject to other
+does not guarantee that the next request will be successful. Server metrics may be subject to other
 conditions like the one shown in the example from {{request-quota}}.
 
 A server MAY return `RateLimit` response header fields independently
@@ -415,7 +396,7 @@ of the response status code.  This includes throttled responses.
 If a response contains both the `Retry-After` and the `RateLimit-Reset` header fields,
 the value of `RateLimit-Reset` MUST be consistent with the one of `Retry-After`.
 
-When using a quota policy involving more than one time-window,
+When using a policy involving more than one `time-window`,
 the server MUST reply with the `RateLimit` headers related to the window
 with the lower `RateLimit-Remaining` values.
 
@@ -423,7 +404,7 @@ Under certain conditions, a server MAY artificially lower `RateLimit` headers va
 eg. to respond to Denial of Service attacks or in case of resource saturation.
 
 
-# Receiving Rate-Limit headers
+# Receiving RateLimit headers
 
 A client MUST process the received `RateLimit` headers.
 
@@ -434,10 +415,13 @@ This includes a `RateLimit-Reset` moment too far in the future or a `request-quo
 
 Malformed `RateLimit` headers MAY be ignored.
 
-A client SHOULD NOT exceed the quota-units expressed in `RateLimit-Remaining` before the `time-window` expressed
+A client SHOULD NOT exceed the `quota-units` expressed in `RateLimit-Remaining` before the `time-window` expressed
 in `RateLimit-Reset`.
 
 A client MAY still probe the server if the `RateLimit-Reset` is considered too high.
+
+The `quota-policy` values and comments provided in `RateLimit-Limit` are informative
+and MAY be ignored.
 
 If a response contains both the `RateLimit-Reset` and `Retry-After` header fields,
 the `Retry-After` header field MUST take precedence and
@@ -485,7 +469,7 @@ to reach is the daily one.
 The server then exposes the `RateLimit-*` headers to
 inform the client that:
 
-- it has only 100 request left;
+- it has only 100 quota-units left;
 - the window will reset in 10 hours.
 
 ~~~
@@ -513,12 +497,12 @@ Throttling headers may be used to limit concurrency,
 advertising limits that are lower than the usual ones
 in case of saturation, thus increasing availability.
 
-The server adopted a basic quota policy of 100 requests
+The server adopted a basic policy of 100 quota-units
 per minute,
 and in case of resource exhaustion adapts the returned values
 reducing both `RateLimit-Limit` and `RateLimit-Remaining`.
 
-After 2 seconds the server replied to 40 requests
+After 2 seconds the client consumed 40 quota-units
 
 ~~~
 Request:
@@ -536,7 +520,7 @@ Response:
   {"elapsed": 2, "issued": 40}
 ~~~
 
-At the subsequent 41th request - due to resource exhaustion -
+At the subsequent request - due to resource exhaustion -
 the server advertises only `RateLimit-Remaining: 20`.
 
 ~~~
@@ -605,7 +589,7 @@ Response:
 
   HTTP/1.1 200 Ok
   Content-Type: application/json
-  RateLimit-Limit: 100, 100; window=60
+  RateLimit-Limit: 100, 100;window=60
   Ratelimit-Remaining: 99
   Ratelimit-Reset: 50
 
@@ -614,14 +598,14 @@ Response:
 
 ### Dynamic limits with parameterized windows
 
-The quota policy conveyed by `RateLimit-Limit` states that
-the server accepts 100 requests per minute.
+The policy conveyed by `RateLimit-Limit` states that
+the server accepts 100 quota-units per minute.
 
 Due to resource exhaustion, the server artificially lowers
 the actual limits returned in the throttling headers.
 
-The current quota policy advertises then
-only 9 requests in the next 50 seconds.
+The current policy advertises then
+only 9 quota-units in the next 50 seconds.
 
 Note that the server could have lowered even the other
 values in `RateLimit-Limit`: this specification
@@ -637,7 +621,7 @@ Response:
 
   HTTP/1.1 200 Ok
   Content-Type: application/json
-  RateLimit-Limit: 10, 100; window=60
+  RateLimit-Limit: 10, 100;window=60
   Ratelimit-Remaining: 9
   Ratelimit-Reset: 50
 
@@ -649,7 +633,7 @@ Response:
 The server does not expose `RateLimit-Remaining` values, but
 resets the limit counter every second.
 
-It communicates to the client the limit of 10 request per second
+It communicates to the client the limit of 10 quota-units per second
 always returning the couple `RateLimit-Limit` and `RateLimit-Reset`.
 
 ~~~
@@ -711,7 +695,7 @@ Response:
 
   HTTP/1.1 200 Ok
   Content-Type: application/json
-  RateLimit-Limit: 5000, 1000; window=3600, 5000; window=86400
+  RateLimit-Limit: 5000, 1000;window=3600, 5000;window=86400
   RateLimit-Remaining: 100
   RateLimit-Reset: 36000
 
@@ -724,29 +708,30 @@ Response:
 
 ## Throttling does not prevent clients from issuing requests
 
-While this specification helps clients to avoid
-going over quota, it does not prevent them to
-make further requests.
+This specification does not prevent clients to
+make over-quota requests.
 
-Servers should always implement their mechanisms
+Servers should always implement mechanisms
 to prevent resource exhaustion.
 
 ## Information disclosure
 
 Servers should not disclose operational capacity informations that
-can be used to saturate server resources.
+can be used to saturate its resources.
 
-While this specification does not mandate whether non 2xx requests
+While this specification does not mandate whether non 2xx responses
 consume quota, if 401 and 403 responses count on quota
-a malicious client could get traffic informations of another
-user probing the endpoints.
+a malicious client could probe the endpoint
+to get traffic informations of another
+user .
 
-## Remaining requests are not granted requests
+## Remaining quota-units are not granted requests
 
-The values passed in `RateLimit-*` headers are hints given from the server
+`RateLimit-*` headers convey hints from the server
 to the clients in order to avoid being throttled out.
 
-Clients MUST NOT give for granted the values returned in `RateLimit-Remaining`.
+Clients MUST NOT consider the `quota-units` returned in `RateLimit-Remaining`
+as a service level agreement.
 
 In case of resource saturation, the server MAY artificially lower the returned
 values or not serve the request anyway.
@@ -756,14 +741,14 @@ values or not serve the request anyway.
 Consider that `request-quota` may not be restored after the moment referenced by `RateLimit-Reset`,
 and the `RateLimit-Reset` value should not be considered fixed nor constant.
 
-Subsequent requests may return an increased value of `RateLimit-Reset` to limit
+Subsequent requests may return an higher `RateLimit-Reset` value to limit
 concurrency or implement dynamic or adaptive throttling policies.
 
 ## Resource exhaustion and clock skew
 
-When returning `RateLimit-Reset`, implementers must be aware that many throttled
-clients may come back at the very moment specified. For example, if the time-window
-is one hour and the returned value is something like
+Implementers returning `RateLimit-Reset` must be aware that many throttled
+clients may come back at the very moment specified.
+For example, when returning
 
 ```
 RateLimit-Reset: Tue, 15 Nov 1994 08:00:00 GMT
@@ -850,7 +835,7 @@ RFC EDITOR PLEASE DELETE THIS SECTION.
 Thanks to Willi Schoenborn, Alessandro Ranellucci, Erik Wilde and Mark Nottingham for being the initial contributors
 of this specifications.
 
-# Ratelimit headers currently used on the web
+# RateLimit headers currently used on the web
 
 RFC EDITOR PLEASE DELETE THIS SECTION.
 
@@ -881,6 +866,22 @@ Here are some interoperability issues:
   * X-RateLimit-Remaining and X-Rate-Limit-Remaining
   * X-RateLimit-Reset and X-Rate-Limit-Reset
 
+The semantic of RateLimit-Remaining depends on the windowing algorithm.
+A sliding window policy for example may result in having a ratelimit-remaining
+value related to the ratio between the current and the maximum throughput.
+Eg.
+
+    RateLimit-Limit: 12, 12;window=1
+    RateLimit-Remaining: 6             ; using 50% of throughput, that is 6 units/s
+    RateLimit-Reset: 1
+
+If this is the case, the optimal solution is to achieve
+
+    RateLimit-Limit: 12, 12;window=1
+    RateLimit-Remaining: 1             ; using 100% of throughput, that is 12 units/s
+    RateLimit-Reset: 1
+
+At this point you should stop increasing your request rate.
 
 # FAQ
 
@@ -888,7 +889,20 @@ Here are some interoperability issues:
 
    To simplify enforcement of throttling policies.
 
-2. Why using delta-seconds instead of UNIX Timestamp? Why HTTP-date is NOT RECOMMENDED?
+2. Can I use RateLimit-\* in throttled responses (eg with status code 429)?
+
+   Yes, you can.
+
+3. Are those specs tied to RFC 6585?
+
+   No. [RFC6585] defines the `429` status code and we use it just as an example of a throttled request,
+   that could instead use even 403 or whatever status code.
+
+4. Why don't pass the trottling scope as a parameter?
+
+   I'm open to suggestions. File an issue if you think it's worth ;).
+
+5. Why using delta-seconds instead of UNIX Timestamp? Why HTTP-date is NOT RECOMMENDED?
    Why not using subsecond precision?
 
    Using delta-seconds permits to align with `Retry-After`, which is returned in similar contexts,
@@ -906,39 +920,19 @@ Here are some interoperability issues:
    on the [httpwg ml](https://lists.w3.org/Archives/Public/ietf-http-wg/2019JulSep/0202.html)
 
 
-3. Why don't pass the trottling scope as a parameter?
-
-   I'm open to suggestions. File an issue if you think it's worth ;).
-
-4. Do `RateLimit-Limit` and `RateLimit-Remaining` represent the exact number of requests
-   I can issue?
-
-   No, unless the server explicits that in some way.
-   As servers may weight requests, this to not impose a 1-1 mapping between
-   the "requests quota" and the "maximum number of requests".
-   See the example in {{request-quota}}
-
-5. Do we want to tie this spec to RFC 6585?
-
-   [RFC6585] defines the `429` status code. We could dis-entangle this spec from that
-   one and avoiding any suggestion on which HTTP status code to use in over-quota request.
-
 6. Why not support multiple quota remaining?
 
    While this might be of some value, my experience suggests that overly-complex quota implementations
    results in lower effectiveness of this policy. This spec allows the client to easily focusing on
    RateLimit-Remaining and RateLimit-Reset.
 
-7. Can I use RateLimit-\* in throttled responses (eg together with 429)?
-   Yes, you can.
-
-8. Shouldn't I limit concurrency instead of request rate?
+7. Shouldn't I limit concurrency instead of request rate?
 
    You can do both. The goal of this spec is to provide guidance for
    clients in shaping their requests without being throttled out.
 
-   Usually, limiting concurrency results in unserviced client requests,
-   which is something you may want to avoid.
+   Limiting concurrency results in unserviced client requests,
+   which is something we want to avoid.
 
    A standard way to limit concurrency is to return 503 + Retry-After
    in case of resource saturation (eg. thrashing, connection queues too long,
@@ -950,31 +944,20 @@ Here are some interoperability issues:
    Saturation conditions can be either dynamic or static: all this is out of
    the scope for the current document.
 
-9. Do a positive value of `RateLimit-Remaining` imply any service guarantee for my
+8. Do a positive value of `RateLimit-Remaining` imply any service guarantee for my
    future requests to be served?
 
    No. The returned values were used to decide whether to serve or not *the current request*
-   and so they do not imply any guarantee that future requests will be successful.
+   and do not imply any guarantee that future requests will be successful.
 
-   Instead they provide informations that should be used to understand when future requests
-   have an high probablility of not being successful. A low value for `RateLimit-Remaining`
+   Instead they help to understand when future requests
+   will probably be throttled. A low value for `RateLimit-Remaining`
    should be intepreted as a yellow traffic-light for either
-   the number of requests issued in the time-window
+   the number of requests issued in the `time-window`
    or the request throughput.
 
-   Servers implementing sliding window techniques or concurrency limits moreover may arbitrarily
-   lower the internal counters used to compute the remaining quota values.
+9. Is the quota-policy definition {{quota-policy}} too complex?
 
-10. Is the quota-policy definition {{quota-policy}} too complex?
-
-    The key runtime value is the first element of the list, the others are informative.
-    So for the following header:
-
-    ```
-    RateLimit-Limit: 100, 100; window=60;burst=1000;comment="sliding window", 5000;window=3600;burst=0;comment="fixed window"
-    ```
-
-    the key value is the one referencing the lowest limit: `100`
     You can always return the simplest form of the 3 headers
 
     ```
@@ -982,4 +965,13 @@ Here are some interoperability issues:
     RateLimit-Remaining: 50
     RateLimit-Reset: 60
     ```
+
+    The key runtime value is the first element of the list: `expiring-limit`, the others `quota-policy` are informative.
+    So for the following header:
+
+    ```
+    RateLimit-Limit: 100, 100;window=60;burst=1000;comment="sliding window", 5000;window=3600;burst=0;comment="fixed window"
+    ```
+
+    the key value is the one referencing the lowest limit: `100`
 
