@@ -421,7 +421,7 @@ A client MAY still probe the server if the `RateLimit-Reset` is considered too h
 
 The value of `RateLimit-Reset` is generated at response time:
 a client aware of a significant network latency MAY behave accordingly
-and use other informations (eg. the `Date` response header) to better
+and use other informations (eg. the `Date` response header, or otherwise gathered metrics) to better
 estimate the `RateLimit-Reset` moment intended by the server.
 
 The `quota-policy` values and comments provided in `RateLimit-Limit` are informative
