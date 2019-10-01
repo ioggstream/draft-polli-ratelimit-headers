@@ -231,7 +231,7 @@ The `request-quota` MAY differ from the total number of acceptable requests
 when weight mechanisms, bursts, or other server policies are implemented.
 
 If the `request-quota` does not match the maximum number of acceptable requests
-the relation with that SHOULD be communicated out-of-bound.
+the relation with that SHOULD be communicated out-of-band.
 
 Example: A server could
 
@@ -303,7 +303,7 @@ via an optional `quota-policy` value, like shown in the following example
 If the `expiring-limit` is not associated to a `time-window`, the `time-window` MUST either be:
 
 - inferred by the value of `RateLimit-Reset` at the moment of the reset, or
-- communicated out-of-bound (eg. in the documentation).
+- communicated out-of-band (eg. in the documentation).
 
 Policies using multiple quota limits MAY be returned using multiple
 `quota-policy` items, like shown in the following two examples:
@@ -433,7 +433,7 @@ the `RateLimit-Reset` header field MAY be ignored.
 ### Throttling informations in responses
 
 The client exhausted its request-quota for the next 50 seconds.
-The `time-window` is communicated out-of-bound or inferred by the header values.
+The `time-window` is communicated out-of-band or inferred by the header values.
 
 ~~~
 Request:
@@ -951,7 +951,7 @@ At this point you should stop increasing your request rate.
 
    Instead they help to understand when future requests
    will probably be throttled. A low value for `RateLimit-Remaining`
-   should be intepreted as a yellow traffic-light for either
+   should be interpreted as a yellow traffic-light for either
    the number of requests issued in the `time-window`
    or the request throughput.
 
