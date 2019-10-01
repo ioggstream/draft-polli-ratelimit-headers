@@ -440,20 +440,23 @@ the `RateLimit-Reset` header field MAY be ignored.
 The client exhausted its request-quota for the next 50 seconds.
 The `time-window` is communicated out-of-band or inferred by the header values.
 
-~~~
 Request:
 
-  GET /items/123
+~~~
+GET /items/123
+
+~~~
 
 Response:
 
-  HTTP/1.1 200 Ok
-  Content-Type: application/json
-  RateLimit-Limit: 100
-  Ratelimit-Remaining: 0
-  Ratelimit-Reset: 50
+~~~
+HTTP/1.1 200 Ok
+Content-Type: application/json
+RateLimit-Limit: 100
+Ratelimit-Remaining: 0
+Ratelimit-Reset: 50
 
-  {"hello": "world"}
+{"hello": "world"}
 ~~~
 
 ### Use in conjunction with custom headers {#use-with-custom-headers}
@@ -476,22 +479,25 @@ inform the client that:
 - it has only 100 quota-units left;
 - the window will reset in 10 hours.
 
-~~~
 Request:
 
-  GET /items/123
+~~~
+GET /items/123
+
+~~~
 
 Response:
 
-  HTTP/1.1 200 Ok
-  Content-Type: application/json
-  acme-RateLimit-DayLimit: 5000
-  acme-RateLimit-HourLimit: 1000
-  RateLimit-Limit: 5000
-  RateLimit-Remaining: 100
-  RateLimit-Reset: 36000
+~~~
+HTTP/1.1 200 Ok
+Content-Type: application/json
+acme-RateLimit-DayLimit: 5000
+acme-RateLimit-HourLimit: 1000
+RateLimit-Limit: 5000
+RateLimit-Remaining: 100
+RateLimit-Reset: 36000
 
-  {"hello": "world"}
+{"hello": "world"}
 ~~~
 
 
@@ -508,39 +514,45 @@ reducing both `RateLimit-Limit` and `RateLimit-Remaining`.
 
 After 2 seconds the client consumed 40 quota-units
 
-~~~
 Request:
 
-  GET /items/123
+~~~
+GET /items/123
+
+~~~
 
 Response:
 
-  HTTP/1.1 200 Ok
-  Content-Type: application/json
-  RateLimit-Limit: 100
-  RateLimit-Remaining: 60
-  RateLimit-Reset: 58
+~~~
+HTTP/1.1 200 Ok
+Content-Type: application/json
+RateLimit-Limit: 100
+RateLimit-Remaining: 60
+RateLimit-Reset: 58
 
-  {"elapsed": 2, "issued": 40}
+{"elapsed": 2, "issued": 40}
 ~~~
 
 At the subsequent request - due to resource exhaustion -
 the server advertises only `RateLimit-Remaining: 20`.
 
-~~~
 Request:
 
-  GET /items/123
+~~~
+GET /items/123
+
+~~~
 
 Response:
 
-  HTTP/1.1 200 Ok
-  Content-Type: application/json
-  RateLimit-Limit: 100
-  RateLimit-Remaining: 20
-  RateLimit-Reset: 56
+~~~
+HTTP/1.1 200 Ok
+Content-Type: application/json
+RateLimit-Limit: 100
+RateLimit-Remaining: 20
+RateLimit-Reset: 56
 
-  {"elapsed": 4, "issued": 41}
+{"elapsed": 4, "issued": 41}
 ~~~
 
 
@@ -554,26 +566,29 @@ reference the same moment.
 
 The `429 Too Many Requests` HTTP status code is just used as an example.
 
-~~~
 Request:
 
-  GET /items/123
+~~~
+GET /items/123
+
+~~~
 
 Response:
 
-  HTTP/1.1 429 Too Many Requests
-  Content-Type: application/json
-  Date: Mon, 05 Aug 2019 09:27:00 GMT
-  Retry-After: Mon, 05 Aug 2019 09:27:05 GMT
-  RateLimit-Reset: 5
-  RateLimit-Limit: 100
-  Ratelimit-Remaining: 0
+~~~
+HTTP/1.1 429 Too Many Requests
+Content-Type: application/json
+Date: Mon, 05 Aug 2019 09:27:00 GMT
+Retry-After: Mon, 05 Aug 2019 09:27:05 GMT
+RateLimit-Reset: 5
+RateLimit-Limit: 100
+Ratelimit-Remaining: 0
 
-  {
-    "title": "Too Many Requests",
-    "status": 429,
-    "detail": "You have exceeded your quota"
-  }
+{
+"title": "Too Many Requests",
+"status": 429,
+"detail": "You have exceeded your quota"
+}
 ~~~
 
 
@@ -584,20 +599,23 @@ Response:
 The client has 99 `quota-units` left for the next 50 seconds.
 The `time-window` is communicated by the `window` parameter, so we know the throughput is 100 `quota-units` per minute.
 
-~~~
 Request:
 
-  GET /items/123
+~~~
+GET /items/123
+
+~~~
 
 Response:
 
-  HTTP/1.1 200 Ok
-  Content-Type: application/json
-  RateLimit-Limit: 100, 100;window=60
-  Ratelimit-Remaining: 99
-  Ratelimit-Reset: 50
+~~~
+HTTP/1.1 200 Ok
+Content-Type: application/json
+RateLimit-Limit: 100, 100;window=60
+Ratelimit-Remaining: 99
+Ratelimit-Reset: 50
 
-  {"hello": "world"}
+{"hello": "world"}
 ~~~
 
 ### Dynamic limits with parameterized windows
@@ -616,20 +634,23 @@ values in `RateLimit-Limit`: this specification
 does not mandate any relation between the header values
 in subsequent responses.
 
-~~~
 Request:
 
-  GET /items/123
+~~~
+GET /items/123
+
+~~~
 
 Response:
 
-  HTTP/1.1 200 Ok
-  Content-Type: application/json
-  RateLimit-Limit: 10, 100;window=60
-  Ratelimit-Remaining: 9
-  Ratelimit-Reset: 50
+~~~
+HTTP/1.1 200 Ok
+Content-Type: application/json
+RateLimit-Limit: 10, 100;window=60
+Ratelimit-Remaining: 9
+Ratelimit-Reset: 50
 
-  {"hello": "world"}
+{"hello": "world"}
 ~~~
 
 ### Missing Remaining informations
@@ -640,34 +661,40 @@ resets the limit counter every second.
 It communicates to the client the limit of 10 quota-units per second
 always returning the couple `RateLimit-Limit` and `RateLimit-Reset`.
 
-~~~
 Request:
 
-  GET /items/123
+~~~
+GET /items/123
+
+~~~
 
 Response:
 
-  HTTP/1.1 200 Ok
-  Content-Type: application/json
-  RateLimit-Limit: 10
-  Ratelimit-Reset: 1
+~~~
+HTTP/1.1 200 Ok
+Content-Type: application/json
+RateLimit-Limit: 10
+Ratelimit-Reset: 1
 
-  {"first": "request"}
+{"first": "request"}
 ~~~
 
-~~~
 Request:
 
-  GET /items/123
+~~~
+GET /items/123
+
+~~~
 
 Response:
 
-  HTTP/1.1 200 Ok
-  Content-Type: application/json
-  RateLimit-Limit: 10
-  Ratelimit-Reset: 1
+~~~
+HTTP/1.1 200 Ok
+Content-Type: application/json
+RateLimit-Limit: 10
+Ratelimit-Reset: 1
 
-  {"second": "request"}
+{"second": "request"}
 ~~~
 
 ### Use with multiple windows
@@ -690,20 +717,23 @@ inform the client that:
 - the window will reset in 10 hours;
 - the `expiring-limit` is 5000.
 
-~~~
 Request:
 
-  GET /items/123
+~~~
+GET /items/123
+
+~~~
 
 Response:
 
-  HTTP/1.1 200 Ok
-  Content-Type: application/json
-  RateLimit-Limit: 5000, 1000;window=3600, 5000;window=86400
-  RateLimit-Remaining: 100
-  RateLimit-Reset: 36000
+~~~
+HTTP/1.1 200 OK
+Content-Type: application/json
+RateLimit-Limit: 5000, 1000;window=3600, 5000;window=86400
+RateLimit-Remaining: 100
+RateLimit-Reset: 36000
 
-  {"hello": "world"}
+{"hello": "world"}
 ~~~
 
 
@@ -754,9 +784,9 @@ Implementers returning `RateLimit-Reset` must be aware that many throttled
 clients may come back at the very moment specified.
 For example, when returning
 
-```
+~~~
 RateLimit-Reset: Tue, 15 Nov 1994 08:00:00 GMT
-```
+~~~
 
 there's a high probability that all clients will show up at `08:00:00`.
 
@@ -965,18 +995,14 @@ At this point you should stop increasing your request rate.
 
     You can always return the simplest form of the 3 headers
 
-    ```
-    RateLimit-Limit: 100
-    RateLimit-Remaining: 50
-    RateLimit-Reset: 60
-    ```
+        RateLimit-Limit: 100
+        RateLimit-Remaining: 50
+        RateLimit-Reset: 60
 
     The key runtime value is the first element of the list: `expiring-limit`, the others `quota-policy` are informative.
     So for the following header:
 
-    ```
-    RateLimit-Limit: 100, 100;window=60;burst=1000;comment="sliding window", 5000;window=3600;burst=0;comment="fixed window"
-    ```
+        RateLimit-Limit: 100, 100;window=60;burst=1000;comment="sliding window", 5000;window=3600;burst=0;comment="fixed window"
 
     the key value is the one referencing the lowest limit: `100`
 
