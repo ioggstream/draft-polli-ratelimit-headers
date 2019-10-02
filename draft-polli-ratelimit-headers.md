@@ -833,7 +833,7 @@ RFC EDITOR PLEASE DELETE THIS SECTION.
 
 Thanks to Willi Schoenborn, Alejandro Martinez Ruiz, Alessandro Ranellucci,
 Erik Wilde and Mark Nottingham for being the initial contributors
-of this specifications.
+ of these specifications.
 
 # RateLimit headers currently used on the web
 
