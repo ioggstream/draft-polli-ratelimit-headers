@@ -907,13 +907,13 @@ value related to the ratio between the current and the maximum throughput.
 Eg.
 
     RateLimit-Limit: 12, 12;window=1
-    RateLimit-Remaining: 6             ; using 50% of throughput, that is 6 units/s
+    RateLimit-Remaining: 6          ; using 50% of throughput, that is 6 units/s
     RateLimit-Reset: 1
 
 If this is the case, the optimal solution is to achieve
 
     RateLimit-Limit: 12, 12;window=1
-    RateLimit-Remaining: 1             ; using 100% of throughput, that is 12 units/s
+    RateLimit-Remaining: 1          ; using 100% of throughput, that is 12 units/s
     RateLimit-Reset: 1
 
 At this point you should stop increasing your request rate.
@@ -997,16 +997,20 @@ At this point you should stop increasing your request rate.
 
 9. Is the quota-policy definition {{quota-policy}} too complex?
 
-    You can always return the simplest form of the 3 headers
+   You can always return the simplest form of the 3 headers
 
-        RateLimit-Limit: 100
-        RateLimit-Remaining: 50
-        RateLimit-Reset: 60
+~~~
+RateLimit-Limit: 100
+RateLimit-Remaining: 50
+RateLimit-Reset: 60
+~~~
 
-    The key runtime value is the first element of the list: `expiring-limit`, the others `quota-policy` are informative.
-    So for the following header:
+   The key runtime value is the first element of the list: `expiring-limit`, the others `quota-policy` are informative.
+   So for the following header:
 
-        RateLimit-Limit: 100, 100;window=60;burst=1000;comment="sliding window", 5000;window=3600;burst=0;comment="fixed window"
+~~~
+RateLimit-Limit: 100, 100;window=60;burst=1000;comment="sliding window", 5000;window=3600;burst=0;comment="fixed window"
+~~~
 
-    the key value is the one referencing the lowest limit: `100`
+   the key value is the one referencing the lowest limit: `100`
 
