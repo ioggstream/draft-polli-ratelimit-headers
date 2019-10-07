@@ -137,11 +137,9 @@ This proposal defines syntax and semantics for the following header fields:
 
 - `RateLimit-Limit`: containing the requests quota in the time window;
 - `RateLimit-Remaining`: containing the remaining requests quota in the current window;
-- `RateLimit-Reset`: containing the time remaining in the current window, specified in seconds or as a timestamp;
+- `RateLimit-Reset`: containing the time remaining in the current window, specified in seconds.
 
-The behavior of `RateLimit-Reset` is compatible with the one of `Retry-After`.
-
-The preferred syntax for `RateLimit-Reset` is the seconds notation respect to the timestamp one.
+The behavior of `RateLimit-Reset` is compatible with the `delta-seconds` notation of `Retry-After`.
 
 The header fields definition allows to describe complex policies, including the ones
 using multiple and variable time windows and dynamic quotas, or implementing concurrency limits.
@@ -338,32 +336,22 @@ One example of `RateLimit-Remaining` use is below.
 
 The `RateLimit-Reset` response header field indicates either
 
-- the number of seconds until the quota resets, or
-- the timestamp when the quota resets.
+- the number of seconds until the quota resets.
 
 The header value is:
 
-    RateLimit-Reset = delta-seconds / IMF-fixdate
+    RateLimit-Reset = delta-seconds
 
-The `IMF-fixdate` format is defined in [RFC7231] appendix D.
+The delta-seconds format is used because:
 
-The `RateLimit-Reset` value:
-
-- SHOULD use the `delta-seconds` format;
-- MAY use the `IMF-fixdate` format.
-
-The `IMF-fixdate` format is NOT RECOMMENDED.
-
-The preferred format is the `delta-seconds` one, because:
-
-- it does not rely on clock synchronization and is resilient to clock skew between client and server;
+- it does not rely on clock synchronization and is resilient to clock adjustment
+  and clock skew between client and server (see [RFC7231] Section 4.1.1.1);
 - it mitigates the risk related to thundering herd when too many clients are serviced with the same timestamp.
 
-Two examples of `RateLimit-Reset` use are below.
+An example of `RateLimit-Reset` use is below.
 
 ~~~
-   RateLimit-Reset: 50                              ; preferred delta-seconds notation
-   RateLimit-Reset: Tue, 15 Nov 1994 08:12:31 GMT   ; IMF-fixdate notation
+   RateLimit-Reset: 50
 ~~~
 
 The client MUST NOT give for granted that all its `request-quota` will be restored
@@ -937,16 +925,16 @@ At this point you should stop increasing your request rate.
 
    I'm open to suggestions. File an issue if you think it's worth ;).
 
-5. Why using delta-seconds instead of UNIX Timestamp? Why IMF-fixdate is NOT RECOMMENDED?
+5. Why using delta-seconds instead of a UNIX Timestamp?
    Why not using subsecond precision?
 
-   Using delta-seconds permits to align with `Retry-After`, which is returned in similar contexts,
+   Using delta-seconds uniforms with `Retry-After`, which is returned in similar contexts,
    eg on 429 responses.
 
    delta-seconds as defined in [RFC7234] section 1.2.1 clarifies some parsing rules too.
 
-   As explained in [RFC7231] section 4.1.1.1 using `IMF-fixdate` requires a clock synchronization
-   protocol. This may be problematic (eg. clock skew, failure of hardcoded clock synchronization servers,
+   Timestamps requires a clock synchronization protocol (see [RFC7231] section 4.1.1.1).
+   This may be problematic (eg. clock adjustment, clock skew, failure of hardcoded clock synchronization servers,
    IoT devices, ..).
    Moreover timestamps may not be monotonically increasing due to clock adjustment.
    See [Another NTP client failure story](https://community.ntppool.org/t/another-ntp-client-failure-story/1014/)
