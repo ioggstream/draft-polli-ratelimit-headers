@@ -948,12 +948,16 @@ At this point you should stop increasing your request rate.
    As explained in [RFC7231] section 4.1.1.1 using `IMF-fixdate` requires a clock synchronization
    protocol. This may be problematic (eg. clock skew, failure of hardcoded clock synchronization servers,
    IoT devices, ..).
+   Moreover timestamps may not be monotonically increasing due to clock adjustment.
    See [Another NTP client failure story](https://community.ntppool.org/t/another-ntp-client-failure-story/1014/)
 
-   We did not use subsecond precision because almost all rate-limit headers implementations do not use it.
-   Conveyed values are subject to response-time latency. A brief discussion on the subject is
-   on the [httpwg ml](https://lists.w3.org/Archives/Public/ietf-http-wg/2019JulSep/0202.html)
+   We did not use subsecond precision because:
 
+   - that is more subject to system clock correction
+     like the one implemented via the adjtimex() Linux system call;
+   - response-time latency may not make it worth. A brief discussion on the subject is
+     on the [httpwg ml](https://lists.w3.org/Archives/Public/ietf-http-wg/2019JulSep/0202.html)
+   - almost all rate-limit headers implementations do not use it.
 
 6. Why not support multiple quota remaining?
 
