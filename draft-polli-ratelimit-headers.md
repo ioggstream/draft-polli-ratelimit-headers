@@ -248,22 +248,22 @@ GET /books?author=Eco           ; request-quota=4, remaining: 0, status=429
 
 This specification allows describing a quota policy with the following syntax:
 
-    quota-policy = request-quota; "window" "=" time-window *( OWS ";" OWS quota-comment)
+    quota-policy = request-quota; "w" "=" time-window *( OWS ";" OWS quota-comment)
     quota-comment = token "=" (token / quoted-string)
 
 
 An example policy of 100 quota-units per minute.
 
 ~~~
-100;window=60
+100;w=60
 ~~~
 
 Two examples of providing further details via custom parameters
 in `quota-comments`.
 
 ~~~
-100;window=60;comment="fixed window"
-12;window=1; burst=1000;policy="leaky bucket"
+100;w=60;comment="fixed window"
+12;w=1;burst=1000;policy="leaky bucket"
 ~~~
 
 # Header Specifications
@@ -295,7 +295,7 @@ A `time-window` associated to `expiring-limit` can be communicated
 via an optional `quota-policy` value, like shown in the following example
 
 ~~~
-   RateLimit-Limit: 100, 100;window=10
+   RateLimit-Limit: 100, 100;w=10
 ~~~
 
 If the `expiring-limit` is not associated to a `time-window`, the `time-window` MUST either be:
@@ -307,8 +307,8 @@ Policies using multiple quota limits MAY be returned using multiple
 `quota-policy` items, like shown in the following two examples:
 
 ~~~
-   RateLimit-Limit: 10, 10;window=1, 50;window=60, 1000;window=3600, 5000;window=86400
-   RateLimit-Limit: 10, 10;window=1;burst=1000, 1000;window=3600
+   RateLimit-Limit: 10, 10;w=1, 50;w=60, 1000;w=3600, 5000;w=86400
+   RateLimit-Limit: 10, 10;w=1;burst=1000, 1000;w=3600
 ~~~
 
 ## RateLimit-Remaining {#ratelimit-remaining-header}
@@ -387,7 +387,7 @@ When using a policy involving more than one `time-window`,
 the server MUST reply with the `RateLimit` headers related to the window
 with the lower `RateLimit-Remaining` values.
 
-Under certain conditions, a server MAY artificially lower `RateLimit` headers values between subsequent requests,
+Under certain conditions, a server MAY artificially lower `RateLimit` field values between subsequent requests,
 eg. to respond to Denial of Service attacks or in case of resource saturation.
 
 
@@ -585,7 +585,7 @@ Ratelimit-Remaining: 0
 ### Throttling window specified via parameter
 
 The client has 99 `quota-units` left for the next 50 seconds.
-The `time-window` is communicated by the `window` parameter, so we know the throughput is 100 `quota-units` per minute.
+The `time-window` is communicated by the `w` parameter, so we know the throughput is 100 `quota-units` per minute.
 
 Request:
 
@@ -599,7 +599,7 @@ Response:
 ~~~
 HTTP/1.1 200 Ok
 Content-Type: application/json
-RateLimit-Limit: 100, 100;window=60
+RateLimit-Limit: 100, 100;w=60
 Ratelimit-Remaining: 99
 Ratelimit-Reset: 50
 
@@ -614,13 +614,13 @@ the server accepts 100 quota-units per minute.
 Due to resource exhaustion, the server artificially lowers
 the actual limits returned in the throttling headers.
 
-The current policy advertises then
-only 9 quota-units in the next 50 seconds.
+The current policy then advertises
+only 9 quota-units for the next 50 seconds.
 
 Note that the server could have lowered even the other
 values in `RateLimit-Limit`: this specification
-does not mandate any relation between the header values
-in subsequent responses.
+does not mandate any relation between the field values
+contained in subsequent responses.
 
 Request:
 
@@ -634,7 +634,7 @@ Response:
 ~~~
 HTTP/1.1 200 Ok
 Content-Type: application/json
-RateLimit-Limit: 10, 100;window=60
+RateLimit-Limit: 10, 100;w=60
 Ratelimit-Remaining: 9
 Ratelimit-Reset: 50
 
@@ -717,7 +717,7 @@ Response:
 ~~~
 HTTP/1.1 200 OK
 Content-Type: application/json
-RateLimit-Limit: 5000, 1000;window=3600, 5000;window=86400
+RateLimit-Limit: 5000, 1000;w=3600, 5000;w=86400
 RateLimit-Remaining: 100
 RateLimit-Reset: 36000
 
@@ -745,7 +745,7 @@ While this specification does not mandate whether non 2xx responses
 consume quota, if 401 and 403 responses count on quota
 a malicious client could probe the endpoint
 to get traffic informations of another
-user .
+user.
 
 ## Remaining quota-units are not granted requests
 
@@ -783,7 +783,7 @@ RateLimit-Reset: 36000
 
 there's a high probability that all clients will show up at `18:00:00`.
 
-This could be mitigated adding some jitter to the header value.
+This could be mitigated adding some jitter to the field-value.
 
 ## Denial of Service
 
@@ -898,13 +898,13 @@ A sliding window policy for example may result in having a ratelimit-remaining
 value related to the ratio between the current and the maximum throughput.
 Eg.
 
-    RateLimit-Limit: 12, 12;window=1
+    RateLimit-Limit: 12, 12;w=1
     RateLimit-Remaining: 6          ; using 50% of throughput, that is 6 units/s
     RateLimit-Reset: 1
 
 If this is the case, the optimal solution is to achieve
 
-    RateLimit-Limit: 12, 12;window=1
+    RateLimit-Limit: 12, 12;w=1
     RateLimit-Remaining: 1          ; using 100% of throughput, that is 12 units/s
     RateLimit-Reset: 1
 
@@ -1001,7 +1001,7 @@ RateLimit-Reset: 60
    So for the following header:
 
 ~~~
-RateLimit-Limit: 100, 100;window=60;burst=1000;comment="sliding window", 5000;window=3600;burst=0;comment="fixed window"
+RateLimit-Limit: 100, 100;w=60;burst=1000;comment="sliding window", 5000;w=3600;burst=0;comment="fixed window"
 ~~~
 
    the key value is the one referencing the lowest limit: `100`
