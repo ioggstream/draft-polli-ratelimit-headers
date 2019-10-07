@@ -220,8 +220,10 @@ during a `time-window` as defined in {{time-window}}.
 
 The `request-quota` is expressed in `quota-units` and has the following syntax:
 
-    request-quota = quota-units
-    quota-units = 1*DIGIT
+~~~
+   request-quota = quota-units
+   quota-units = 1*DIGIT
+~~~
 
 The `request-quota` SHOULD match the maximum number of acceptable requests.
 
@@ -248,22 +250,24 @@ GET /books?author=Eco           ; request-quota=4, remaining: 0, status=429
 
 This specification allows describing a quota policy with the following syntax:
 
-    quota-policy = request-quota; "w" "=" time-window *( OWS ";" OWS quota-comment)
-    quota-comment = token "=" (token / quoted-string)
-
+~~~
+   quota-policy = request-quota; "w" "=" time-window
+                  *( OWS ";" OWS quota-comment)
+   quota-comment = token "=" (token / quoted-string)
+~~~
 
 An example policy of 100 quota-units per minute.
 
 ~~~
-100;w=60
+   100;w=60
 ~~~
 
 Two examples of providing further details via custom parameters
 in `quota-comments`.
 
 ~~~
-100;w=60;comment="fixed window"
-12;w=1;burst=1000;policy="leaky bucket"
+   100;w=60;comment="fixed window"
+   12;w=1;burst=1000;policy="leaky bucket"
 ~~~
 
 # Header Specifications
@@ -280,15 +284,17 @@ If the client exceeds that limit, it MAY not be served.
 
 The header value is
 
-    RateLimit-Limit = expiring-limit [, 1#quota-policy ]
-    expiring-limit = request-quota
+~~~
+   RateLimit-Limit = expiring-limit [, 1#quota-policy ]
+   expiring-limit = request-quota
+~~~
 
 The `expiring-limit` value MUST be set to the `request-quota` that is closer to reach its limit.
 
 The `quota-policy` is defined in {{quota-policy}}, and its values are informative.
 
 ~~~
-RateLimit-Limit: 100
+   RateLimit-Limit: 100
 ~~~
 
 A `time-window` associated to `expiring-limit` can be communicated
@@ -316,7 +322,7 @@ Policies using multiple quota limits MAY be returned using multiple
 The `RateLimit-Remaining` response header field indicates the remaining `quota-units` defined in {{request-quota}}
 associated to the client.
 
-The header syntax is:
+The header value is
 
     RateLimit-Remaining = quota-units
 
@@ -338,9 +344,11 @@ The `RateLimit-Reset` response header field indicates either
 
 - the number of seconds until the quota resets.
 
-The header value is:
+The header value is
 
-    RateLimit-Reset = delta-seconds
+~~~
+   RateLimit-Reset = delta-seconds
+~~~
 
 The delta-seconds format is used because:
 
@@ -370,9 +378,11 @@ respects the quota policy and MAY not apply to subsequent requests.
 
 Example: a successful response with the following header fields
 
-    RateLimit-Limit: 10
-    RateLimit-Remaining: 1
-    RateLimit-Reset: 7
+~~~
+   RateLimit-Limit: 10
+   RateLimit-Remaining: 1
+   RateLimit-Reset: 7
+~~~
 
 does not guarantee that the next request will be successful. Server metrics may be subject to other
 conditions like the one shown in the example from {{request-quota}}.
@@ -777,8 +787,8 @@ For example, if the quota resets every day at `18:00:00`
 and your server returns the `RateLimit-Reset` accordingly
 
 ~~~
-Date: Tue, 15 Nov 1994 08:00:00 GMT
-RateLimit-Reset: 36000
+   Date: Tue, 15 Nov 1994 08:00:00 GMT
+   RateLimit-Reset: 36000
 ~~~
 
 there's a high probability that all clients will show up at `18:00:00`.
@@ -898,15 +908,19 @@ A sliding window policy for example may result in having a ratelimit-remaining
 value related to the ratio between the current and the maximum throughput.
 Eg.
 
-    RateLimit-Limit: 12, 12;w=1
-    RateLimit-Remaining: 6          ; using 50% of throughput, that is 6 units/s
-    RateLimit-Reset: 1
+~~~
+RateLimit-Limit: 12, 12;w=1
+RateLimit-Remaining: 6          ; using 50% of throughput, that is 6 units/s
+RateLimit-Reset: 1
+~~~
 
 If this is the case, the optimal solution is to achieve
 
-    RateLimit-Limit: 12, 12;w=1
-    RateLimit-Remaining: 1          ; using 100% of throughput, that is 12 units/s
-    RateLimit-Reset: 1
+~~~
+RateLimit-Limit: 12, 12;w=1
+RateLimit-Remaining: 1          ; using 100% of throughput, that is 12 units/s
+RateLimit-Reset: 1
+~~~
 
 At this point you should stop increasing your request rate.
 
