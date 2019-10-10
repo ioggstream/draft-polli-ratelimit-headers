@@ -766,6 +766,25 @@ and the `RateLimit-Reset` value should not be considered fixed nor constant.
 Subsequent requests may return an higher `RateLimit-Reset` value to limit
 concurrency or implement dynamic or adaptive throttling policies.
 
+## Resource exhaustion {#sec-resource-exhaustion}
+
+When returning `RateLimit-Reset` you must be aware that many throttled
+clients may come back at the very moment specified.
+
+This is true for `Retry-After` too.
+
+For example, if the quota resets every day at `18:00:00`
+and your server returns the `RateLimit-Reset` accordingly
+
+~~~
+Date: Tue, 15 Nov 1994 08:00:00 GMT
+RateLimit-Reset: 36000
+~~~
+
+there's a high probability that all clients will show up at `18:00:00`.
+
+This could be mitigated adding some jitter to the header value.
+
 ## Denial of Service
 
 `RateLimit` header fields may assume unexpected values by chance or purpose.
