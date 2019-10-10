@@ -354,7 +354,7 @@ An example of `RateLimit-Reset` use is below.
    RateLimit-Reset: 50
 ~~~
 
-The client MUST NOT give for granted that all its `request-quota` will be restored
+The client MUST NOT assume that all its `request-quota` will be restored
 after the moment referenced by `RateLimit-Reset`.
 The server MAY arbitrarily alter the `RateLimit-Reset` value between subsequent requests
 eg. in case of resource saturation or to implement sliding window policies.
@@ -913,12 +913,12 @@ At this point you should stop increasing your request rate.
 5. Why using delta-seconds instead of a UNIX Timestamp?
    Why not using subsecond precision?
 
-   Using delta-seconds uniforms with `Retry-After`, which is returned in similar contexts,
+   Using delta-seconds aligns with `Retry-After`, which is returned in similar contexts,
    eg on 429 responses.
 
    delta-seconds as defined in [RFC7234] section 1.2.1 clarifies some parsing rules too.
 
-   Timestamps requires a clock synchronization protocol (see [RFC7231] section 4.1.1.1).
+   Timestamps require a clock synchronization protocol (see [RFC7231] section 4.1.1.1).
    This may be problematic (eg. clock adjustment, clock skew, failure of hardcoded clock synchronization servers,
    IoT devices, ..).
    Moreover timestamps may not be monotonically increasing due to clock adjustment.
