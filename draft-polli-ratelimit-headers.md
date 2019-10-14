@@ -324,7 +324,9 @@ associated to the client.
 
 The header value is
 
-    RateLimit-Remaining = quota-units
+~~~
+   RateLimit-Remaining = quota-units
+~~~
 
 Clients MUST NOT assume that a positive `RateLimit-Remaining` value is
 a guarantee of being served.
