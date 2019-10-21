@@ -225,8 +225,10 @@ during a `time-window` as defined in {{time-window}}.
 
 The `request-quota` is expressed in `quota-units` and has the following syntax:
 
-    request-quota = quota-units
-    quota-units = 1*DIGIT
+~~~
+   request-quota = quota-units
+   quota-units = 1*DIGIT
+~~~
 
 The `request-quota` SHOULD match the maximum number of acceptable requests.
 
@@ -253,22 +255,24 @@ GET /books?author=Eco           ; request-quota=4, remaining: 0, status=429
 
 This specification allows describing a quota policy with the following syntax:
 
-    quota-policy = request-quota; "window" "=" time-window *( OWS ";" OWS quota-comment)
-    quota-comment = token "=" (token / quoted-string)
-
+~~~
+   quota-policy = request-quota; "w" "=" time-window
+                  *( OWS ";" OWS quota-comment)
+   quota-comment = token "=" (token / quoted-string)
+~~~
 
 An example policy of 100 quota-units per minute.
 
 ~~~
-100;window=60
+   100;w=60
 ~~~
 
 Two examples of providing further details via custom parameters
 in `quota-comments`.
 
 ~~~
-100;window=60;comment="fixed window"
-12;window=1; burst=1000;policy="leaky bucket"
+   100;w=60;comment="fixed window"
+   12;w=1;burst=1000;policy="leaky bucket"
 ~~~
 
 # Header Specifications
@@ -285,22 +289,24 @@ If the client exceeds that limit, it MAY not be served.
 
 The header value is
 
-    RateLimit-Limit = expiring-limit [, 1#quota-policy ]
-    expiring-limit = request-quota
+~~~
+   RateLimit-Limit = expiring-limit [, 1#quota-policy ]
+   expiring-limit = request-quota
+~~~
 
 The `expiring-limit` value MUST be set to the `request-quota` that is closer to reach its limit.
 
 The `quota-policy` is defined in {{quota-policy}}, and its values are informative.
 
 ~~~
-RateLimit-Limit: 100
+   RateLimit-Limit: 100
 ~~~
 
 A `time-window` associated to `expiring-limit` can be communicated
 via an optional `quota-policy` value, like shown in the following example
 
 ~~~
-   RateLimit-Limit: 100, 100;window=10
+   RateLimit-Limit: 100, 100;w=10
 ~~~
 
 If the `expiring-limit` is not associated to a `time-window`, the `time-window` MUST either be:
@@ -312,8 +318,8 @@ Policies using multiple quota limits MAY be returned using multiple
 `quota-policy` items, like shown in the following two examples:
 
 ~~~
-   RateLimit-Limit: 10, 10;window=1, 50;window=60, 1000;window=3600, 5000;window=86400
-   RateLimit-Limit: 10, 10;window=1;burst=1000, 1000;window=3600
+   RateLimit-Limit: 10, 10;w=1, 50;w=60, 1000;w=3600, 5000;w=86400
+   RateLimit-Limit: 10, 10;w=1;burst=1000, 1000;w=3600
 ~~~
 
 ## RateLimit-Remaining {#ratelimit-remaining-header}
@@ -321,9 +327,11 @@ Policies using multiple quota limits MAY be returned using multiple
 The `RateLimit-Remaining` response header field indicates the remaining `quota-units` defined in {{request-quota}}
 associated to the client.
 
-The header syntax is:
+The header value is
 
-    RateLimit-Remaining = quota-units
+~~~
+   RateLimit-Remaining = quota-units
+~~~
 
 Clients MUST NOT assume that a positive `RateLimit-Remaining` value is
 a guarantee of being served.
@@ -343,9 +351,11 @@ The `RateLimit-Reset` response header field indicates either
 
 - the number of seconds until the quota resets.
 
-The header value is:
+The header value is
 
-    RateLimit-Reset = delta-seconds
+~~~
+   RateLimit-Reset = delta-seconds
+~~~
 
 The delta-seconds format is used because:
 
@@ -375,9 +385,11 @@ respects the quota policy and MAY not apply to subsequent requests.
 
 Example: a successful response with the following header fields
 
-    RateLimit-Limit: 10
-    RateLimit-Remaining: 1
-    RateLimit-Reset: 7
+~~~
+   RateLimit-Limit: 10
+   RateLimit-Remaining: 1
+   RateLimit-Reset: 7
+~~~
 
 does not guarantee that the next request will be successful. Server metrics may be subject to other
 conditions like the one shown in the example from {{request-quota}}.
@@ -392,7 +404,7 @@ When using a policy involving more than one `time-window`,
 the server MUST reply with the `RateLimit` headers related to the window
 with the lower `RateLimit-Remaining` values.
 
-Under certain conditions, a server MAY artificially lower `RateLimit` headers values between subsequent requests,
+Under certain conditions, a server MAY artificially lower `RateLimit` field values between subsequent requests,
 eg. to respond to Denial of Service attacks or in case of resource saturation.
 
 
@@ -590,7 +602,7 @@ Ratelimit-Remaining: 0
 ### Throttling window specified via parameter
 
 The client has 99 `quota-units` left for the next 50 seconds.
-The `time-window` is communicated by the `window` parameter, so we know the throughput is 100 `quota-units` per minute.
+The `time-window` is communicated by the `w` parameter, so we know the throughput is 100 `quota-units` per minute.
 
 Request:
 
@@ -604,7 +616,7 @@ Response:
 ~~~
 HTTP/1.1 200 Ok
 Content-Type: application/json
-RateLimit-Limit: 100, 100;window=60
+RateLimit-Limit: 100, 100;w=60
 Ratelimit-Remaining: 99
 Ratelimit-Reset: 50
 
@@ -619,13 +631,13 @@ the server accepts 100 quota-units per minute.
 Due to resource exhaustion, the server artificially lowers
 the actual limits returned in the throttling headers.
 
-The current policy advertises then
-only 9 quota-units in the next 50 seconds.
+The current policy then advertises
+only 9 quota-units for the next 50 seconds.
 
 Note that the server could have lowered even the other
 values in `RateLimit-Limit`: this specification
-does not mandate any relation between the header values
-in subsequent responses.
+does not mandate any relation between the field values
+contained in subsequent responses.
 
 Request:
 
@@ -639,7 +651,7 @@ Response:
 ~~~
 HTTP/1.1 200 Ok
 Content-Type: application/json
-RateLimit-Limit: 10, 100;window=60
+RateLimit-Limit: 10, 100;w=60
 Ratelimit-Remaining: 9
 Ratelimit-Reset: 50
 
@@ -722,7 +734,7 @@ Response:
 ~~~
 HTTP/1.1 200 OK
 Content-Type: application/json
-RateLimit-Limit: 5000, 1000;window=3600, 5000;window=86400
+RateLimit-Limit: 5000, 1000;w=3600, 5000;w=86400
 RateLimit-Remaining: 100
 RateLimit-Reset: 36000
 
@@ -750,7 +762,7 @@ While this specification does not mandate whether non 2xx responses
 consume quota, if 401 and 403 responses count on quota
 a malicious client could probe the endpoint
 to get traffic informations of another
-user .
+user.
 
 ## Remaining quota-units are not granted requests
 
@@ -782,13 +794,13 @@ For example, if the quota resets every day at `18:00:00`
 and your server returns the `RateLimit-Reset` accordingly
 
 ~~~
-Date: Tue, 15 Nov 1994 08:00:00 GMT
-RateLimit-Reset: 36000
+   Date: Tue, 15 Nov 1994 08:00:00 GMT
+   RateLimit-Reset: 36000
 ~~~
 
 there's a high probability that all clients will show up at `18:00:00`.
 
-This could be mitigated adding some jitter to the header value.
+This could be mitigated adding some jitter to the field-value.
 
 ## Denial of Service
 
@@ -903,15 +915,19 @@ A sliding window policy for example may result in having a ratelimit-remaining
 value related to the ratio between the current and the maximum throughput.
 Eg.
 
-    RateLimit-Limit: 12, 12;window=1
-    RateLimit-Remaining: 6          ; using 50% of throughput, that is 6 units/s
-    RateLimit-Reset: 1
+~~~
+RateLimit-Limit: 12, 12;w=1
+RateLimit-Remaining: 6          ; using 50% of throughput, that is 6 units/s
+RateLimit-Reset: 1
+~~~
 
 If this is the case, the optimal solution is to achieve
 
-    RateLimit-Limit: 12, 12;window=1
-    RateLimit-Remaining: 1          ; using 100% of throughput, that is 12 units/s
-    RateLimit-Reset: 1
+~~~
+RateLimit-Limit: 12, 12;w=1
+RateLimit-Remaining: 1          ; using 100% of throughput, that is 12 units/s
+RateLimit-Reset: 1
+~~~
 
 At this point you should stop increasing your request rate.
 
@@ -1006,7 +1022,7 @@ RateLimit-Reset: 60
    So for the following header:
 
 ~~~
-RateLimit-Limit: 100, 100;window=60;burst=1000;comment="sliding window", 5000;window=3600;burst=0;comment="fixed window"
+RateLimit-Limit: 100, 100;w=60;burst=1000;comment="sliding window", 5000;w=3600;burst=0;comment="fixed window"
 ~~~
 
    the key value is the one referencing the lowest limit: `100`
