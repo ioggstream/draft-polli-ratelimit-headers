@@ -5,8 +5,8 @@ docname: draft-polli-ratelimit-headers-latest
 category: std
 
 ipr: trust200902
-area: General
-workgroup:
+area: Applications and Real-Time
+workgroup: HTTP
 keyword: Internet-Draft
 
 stand_alone: yes
