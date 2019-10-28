@@ -375,7 +375,7 @@ The server MAY arbitrarily alter the `RateLimit-Reset` value between subsequent 
 eg. in case of resource saturation or to implement sliding window policies.
 
 
-# Providing RateLimit headers
+# Providing RateLimit headers {#providing-ratelimit-headers}
 
 A server MAY use one or more `RateLimit` response header fields
 defined in this document to communicate its quota policies.
@@ -979,6 +979,7 @@ At this point you should stop increasing your request rate.
    RateLimit-Remaining and RateLimit-Reset.
 
 7. Shouldn't I limit concurrency instead of request rate?
+   Why don't mention connections?
 
    You can do both. The goal of this spec is to provide guidance for
    clients in shaping their requests without being throttled out.
@@ -995,6 +996,12 @@ At this point you should stop increasing your request rate.
 
    Saturation conditions can be either dynamic or static: all this is out of
    the scope for the current document.
+
+   Newer HTTP versions like HTTP/2 can send multiple requests over the same
+   connection. A concurrency limit policy which drops connections may be problematic.
+
+   RateLimit headers enable sending *on the same connection* different limit values
+   on each response, depending on the policy scope (eg. per-user, per-custom-key, ..)
 
 8. Do a positive value of `RateLimit-Remaining` imply any service guarantee for my
    future requests to be served?
@@ -1027,7 +1034,7 @@ RateLimit-Limit: 100, 100;w=60;burst=1000;comment="sliding window", 5000;w=3600;
 
    the key value is the one referencing the lowest limit: `100`
 
-11. Can we use shorter names? Why don't put everything in one header?
+10. Can we use shorter names? Why don't put everything in one header?
 
    The most common syntax we found on the web is `X-RateLimit-*` and
    when starting this I-D [we opted for it](https://github.com/ioggstream/draft-polli-ratelimit-headers/issues/34#issuecomment-519366481)
@@ -1039,3 +1046,24 @@ RateLimit-Limit: 100, 100;w=60;burst=1000;comment="sliding window", 5000;w=3600;
    Using a single header complicates parsing and takes
    a significantly different approach from the existing
    ones: this can limit adoption.
+
+11. How can I define the throttling scope? To which target does the `RateLimit-Remaining` apply?
+
+   This is a very good question. Actually we should answer this question for the `Retry-After` header first :)
+   Once we have a meaningful answer for that standard header, we can adapt the solution to the `RateLimit` ones.
+
+   To overcome this situation we specified that the provided values were the one used to evaluate
+   the current request. See {{providing-ratelimit-headers}}.
+
+   There are many possible solutions, included the ones below. The point is just to find one which is
+   consistent with the rest of the HTTP spec.
+
+   - pass the information in a different header (eg `Warning`, `RateLimit-Scope`)
+   - add a custom parameter to `RateLimit-Limit` (this spec already allows that, like shown
+     in the following two examples
+
+~~~
+RateLimit-Limit 10,  10;w=60;scope="/books"
+RateLimit-Limit 10,  10;w=60;scope="/v1"
+~~~
+
