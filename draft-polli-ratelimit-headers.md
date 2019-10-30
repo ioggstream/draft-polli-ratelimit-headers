@@ -1027,3 +1027,15 @@ RateLimit-Limit: 100, 100;w=60;burst=1000;comment="sliding window", 5000;w=3600;
 
    the key value is the one referencing the lowest limit: `100`
 
+11. Can we use shorter names? Why don't put everything in one header?
+
+   The most common syntax we found on the web is `X-RateLimit-*` and
+   when starting this I-D [we opted for it](https://github.com/ioggstream/draft-polli-ratelimit-headers/issues/34#issuecomment-519366481)
+
+   The basic form of those headers is easily parseable, even by
+   implementors procesing responses using technologies like
+   dynamic interpreter with limited syntax.
+
+   Using a single header complicates parsing and takes
+   a significantly different approach from the existing
+   ones: this can limit adoption.
