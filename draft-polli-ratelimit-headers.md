@@ -506,7 +506,7 @@ RateLimit-Reset: 36000
 ~~~
 
 
-### Use for limiting concurrency
+### Use for limiting concurrency {#use-for-limiting-concurrency}
 
 Throttling headers may be used to limit concurrency,
 advertising limits that are lower than the usual ones
@@ -745,7 +745,7 @@ RateLimit-Reset: 36000
 
 # Security Considerations
 
-## Throttling does not prevent clients from issuing requests
+## Throttling does not prevent clients from issuing requests {#sec-throttling-does-not-prevent}
 
 This specification does not prevent clients to
 make over-quota requests.
@@ -753,7 +753,7 @@ make over-quota requests.
 Servers should always implement mechanisms
 to prevent resource exhaustion.
 
-## Information disclosure
+## Information disclosure {#sec-information-disclosure}
 
 Servers should not disclose operational capacity informations that
 can be used to saturate its resources.
@@ -979,26 +979,33 @@ At this point you should stop increasing your request rate.
    RateLimit-Remaining and RateLimit-Reset.
 
 7. Shouldn't I limit concurrency instead of request rate?
-   Why don't mention connections?
-
-   You can do both. The goal of this spec is to provide guidance for
-   clients in shaping their requests without being throttled out.
 
    Limiting concurrency results in unserviced client requests,
    which is something we want to avoid.
-
-   A standard way to limit concurrency is to return 503 + Retry-After
-   in case of resource saturation (eg. thrashing, connection queues too long,
+   A problematic way to limit concurrency is connection dropping,
+   especially when connections are multiplexed (eg. HTTP/2).
+   A semantic way to do it is to return 503 + Retry-After
+   in case of **resource saturation** (eg. thrashing, connection queues too long,
    Service Level Objectives not meet, ..).
-
-   Dynamically lowering the values returned by the rate-limit headers,
-   and returning retry-after along with them can improve availability.
 
    Saturation conditions can be either dynamic or static: all this is out of
    the scope for the current document.
 
-   Newer HTTP versions like HTTP/2 can send multiple requests over the same
-   connection. A concurrency limit policy which drops connections may be problematic.
+   You can use this spec to limit concurrency
+   at the HTTP level (see {{use-for-limiting-concurrency}})
+   and help clients to
+   shape their requests avoiding being throttled out.
+
+7a. Why don't mention connections?
+
+   Beware of the term "connection":
+
+   - it is just *one* possible saturation cause. Once you go that path
+     you will expose other infrastructural details (bandwidth, CPU, .. see {{sec-information-disclosure}})
+     and complicate client compliance;
+   - it is an infrastructural detail defined in terms of server and network
+     rather than the consumed service. This specification protects
+     services, and then infrastructures through client cooperation (see {{sec-throttling-does-not-prevent}}).
 
    RateLimit headers enable sending *on the same connection* different limit values
    on each response, depending on the policy scope (eg. per-user, per-custom-key, ..)
@@ -1049,14 +1056,17 @@ RateLimit-Limit: 100, 100;w=60;burst=1000;comment="sliding window", 5000;w=3600;
 
 11. How can I define the throttling scope? To which target does the `RateLimit-Remaining` apply?
 
-   This is a very good question. Actually we should answer this question for the `Retry-After` header first :)
-   Once we have a meaningful answer for that standard header, we can adapt the solution to the `RateLimit` ones.
+   There are many possible solutions, included the ones below. But we decided to:
+
+   - wait until a similar issue is closed on [Retry-After into http-core](https://github.com/httpwg/http-core/issues/99)
+     because we want consistent with the rest of the HTTP spec.
+   - file [issue #70](https://github.com/ioggstream/draft-polli-ratelimit-headers/issues/70) to collect
+     feedback
 
    To overcome this situation we specified that the provided values were the one used to evaluate
    the current request. See {{providing-ratelimit-headers}}.
 
-   There are many possible solutions, included the ones below. The point is just to find one which is
-   consistent with the rest of the HTTP spec.
+   Here are some ideas, contribute yours into the issue:
 
    - pass the information in a different header (eg `Warning`, `RateLimit-Scope`)
    - add a custom parameter to `RateLimit-Limit` (this spec already allows that, like shown
