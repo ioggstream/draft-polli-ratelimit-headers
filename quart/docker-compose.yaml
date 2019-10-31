@@ -1,0 +1,15 @@
+version: '3.0'
+services:
+  client:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    links:
+    - server:server
+    entrypoint: tox -e client -- server
+
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    entrypoint: tox -e server
