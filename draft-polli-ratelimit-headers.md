@@ -398,7 +398,8 @@ A server MAY return `RateLimit` response header fields independently
 of the response status code.  This includes throttled responses.
 
 If a response contains both the `Retry-After` and the `RateLimit-Reset` header fields,
-the value of `RateLimit-Reset` MUST be consistent with the one of `Retry-After`.
+the value of `RateLimit-Reset` MAY reference the same point in time as
+`Retry-After`.
 
 When using a policy involving more than one `time-window`,
 the server MUST reply with the `RateLimit` headers related to the window
@@ -566,8 +567,8 @@ RateLimit-Reset: 56
 A client exhausted its quota and the server throttles the request
 sending the `Retry-After` response header field.
 
-The values of `Retry-After` and `RateLimit-Reset` are consistent as they
-reference the same moment.
+The values of `Retry-After` and `RateLimit-Reset` reference the same moment,
+but there is no requirement that they do so.
 
 The `429 Too Many Requests` HTTP status code is just used as an example.
 
