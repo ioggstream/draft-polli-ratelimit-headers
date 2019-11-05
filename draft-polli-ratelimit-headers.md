@@ -991,8 +991,9 @@ At this point you should stop increasing your request rate.
    in case of resource saturation (eg. thrashing, connection queues too long,
    Service Level Objectives not meet, ..).
 
-   Dynamically lowering the values returned by the rate-limit headers,
-   and returning retry-after along with them can improve availability.
+   Availability can be improved by dynamically lowering the values returned by
+   the rate-limit headers to slow down clients, and retry-after can be used to
+   push them back.
 
    Saturation conditions can be either dynamic or static: all this is out of
    the scope for the current document.
