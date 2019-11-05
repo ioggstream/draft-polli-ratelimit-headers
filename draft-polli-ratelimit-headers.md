@@ -629,11 +629,11 @@ Ratelimit-Reset: 50
 The policy conveyed by `RateLimit-Limit` states that
 the server accepts 100 quota-units per minute.
 
-Due to resource exhaustion, the server artificially lowers
+Due to resource scarcity, the server artificially lowers
 the actual limits returned in the throttling headers.
 
 The current policy then advertises
-only 9 quota-units for the next 50 seconds.
+only 9 quota-units for the next 50 seconds to slow down the client.
 
 Note that the server could have lowered even the other
 values in `RateLimit-Limit`: this specification
@@ -658,6 +658,66 @@ Ratelimit-Reset: 50
 
 {"hello": "world"}
 ~~~
+
+### Dynamic limits for pushing back and slowing down
+
+Continuing the previous example, let's say the client waits 10 seconds and
+performs a new request which, due to resource exhaustion, the server rejects
+and pushes back, advertising `RateLimit-Remaining: 0` for the next 20 seconds.
+
+The server decides to advertise a new smaller window with a lower limit to slow
+down the client for the rest of its original window after the 20 seconds elapse.
+
+Request:
+
+~~~
+GET /items/123
+
+~~~
+
+Response:
+
+~~~
+HTTP/1.1 429 Too Many Requests
+RateLimit-Limit: 0, 15;w=20
+Ratelimit-Remaining: 0
+Ratelimit-Reset: 20
+
+~~~
+
+## Dynamic limits for pushing back with Retry-After and slow down
+
+Alternatively, given the same context where the previous example starts, we
+can convey the same information to the client via the Retry-After header, with
+the advantage that the server can now specify the policy's nominal limit and
+window that will apply after the reset, ie. assuming the resource exhaustion
+is likely to be gone by then, so the advertised policy does not need to be
+adjusted, yet we managed to stop requests for a while and slow down the rest of
+the current window.
+
+Request:
+
+~~~
+GET /items/123
+
+~~~
+
+Response:
+
+~~~
+HTTP/1.1 429 Too Many Requests
+Retry-After: 20
+RateLimit-Limit: 15, 100;w=60
+Ratelimit-Remaining: 15
+Ratelimit-Reset: 40
+
+~~~
+
+Note that in this last response the client is expected to honor the
+`Retry-After` header and perform no requests for the specified amount of
+time, whereas the previous example would not force the client to stop
+requests before the reset time is elapsed, as it would still be free to
+query again the server even if it is likely to have the request rejected.
 
 ### Missing Remaining informations
 
