@@ -1063,12 +1063,12 @@ RateLimit-Limit: 100, 100;w=60;burst=1000;comment="sliding window", 5000;w=3600;
    - file [issue #70](https://github.com/ioggstream/draft-polli-ratelimit-headers/issues/70) to collect
      feedback
 
-   To overcome this situation we specified that the provided values were the one used to evaluate
+   To overcome this situation we specified that the provided values were the ones used to evaluate
    the current request. See {{providing-ratelimit-headers}}.
 
    Here are some ideas, contribute yours into the issue:
 
-   - pass the information in a different header (eg `Warning`, `RateLimit-Scope`)
+   - pass the information in a different header (eg `RateLimit-Scope`)
    - add a custom parameter to `RateLimit-Limit` (this spec already allows that, like shown
      in the following two examples
 
@@ -1076,4 +1076,3 @@ RateLimit-Limit: 100, 100;w=60;burst=1000;comment="sliding window", 5000;w=3600;
 RateLimit-Limit 10,  10;w=60;scope="/books"
 RateLimit-Limit 10,  10;w=60;scope="/v1"
 ~~~
-
