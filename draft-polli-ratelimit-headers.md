@@ -415,6 +415,38 @@ moment.
 Nonetheless servers MAY decide to send the `RateLimit` fields
 in a trailer section.
 
+# Intermediaries
+
+An intermediary MUST NOT alter the RateLimit headers values
+in such a way as to communicate a more permissive quota-policy;
+this includes removing the RateLimit headers.
+
+An intermediary MAY alter the RateLimit headers
+in such a way as to communicate a more restrictive quota-policy when:
+
+- it is aware of the quota-unit semantic used by the Origin Server;
+- it implements this specification and enforces a quota-policy which
+  is more restrictive than the one conveyed in the headers.
+
+An intermediary
+SHOULD forward a request even if it presumes that that request
+might not be serviced;
+the server returning the RateLimit headers is the sole responsible
+of enforcing the communicated quota-policy.
+
+This specification does not mandate any behavior on intermediaries
+respect to retries,
+nor requires that intermediaries have any role in respecting quota-policies.
+For example, it is legitimate for a proxy to retransmit a request
+without notifying the client, and thus consuming quota-units.
+
+# Caching
+
+The RateLimit headers MUST NOT be cached because their values are ephemeral.
+
+Apart from that, as is the ordinary case for HTTP caching ({{?RFC7234}}), a response with
+RateLimit header fields might be cached and re-used for subsequent requests.
+
 # Receiving RateLimit headers
 
 A client MUST process the received `RateLimit` headers.
@@ -843,6 +875,11 @@ consume quota, if 401 and 403 responses count on quota
 a malicious client could probe the endpoint
 to get traffic informations of another
 user.
+
+As intermediaries might retransmit requests and consume
+quota-units without prior knowledge of the User Agent,
+RateLimit headers might reveal the existence of an intermediary
+to the User Agent.
 
 ## Remaining quota-units are not granted requests
 
