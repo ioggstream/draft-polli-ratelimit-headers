@@ -665,7 +665,7 @@ Continuing the previous example, let's say the client waits 10 seconds and
 performs a new request which, due to resource exhaustion, the server rejects
 and pushes back, advertising `RateLimit-Remaining: 0` for the next 20 seconds.
 
-The server decides to advertise a new smaller window with a lower limit to slow
+The server advertises a smaller window with a lower limit to slow
 down the client for the rest of its original window after the 20 seconds elapse.
 
 Request:
