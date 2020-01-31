@@ -629,7 +629,7 @@ Ratelimit-Reset: 50
 The policy conveyed by `RateLimit-Limit` states that
 the server accepts 100 quota-units per minute.
 
-Due to resource scarcity, the server artificially lowers
+To avoid resource exhaustion, the server artificially lowers
 the actual limits returned in the throttling headers.
 
 The current policy then advertises
