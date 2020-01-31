@@ -568,7 +568,7 @@ A client exhausted its quota and the server throttles the request
 sending the `Retry-After` response header field.
 
 The values of `Retry-After` and `RateLimit-Reset` reference the same moment,
-but there is no requirement that they do so.
+but this is not a requirement.
 
 The `429 Too Many Requests` HTTP status code is just used as an example.
 
