@@ -1052,7 +1052,7 @@ At this point you should stop increasing your request rate.
    Service Level Objectives not meet, ..).
 
    Availability can be improved by dynamically lowering the values returned by
-   the rate-limit headers to slow down clients, and retry-after can be used to
+   the `RateLimit-*` headers to slow down clients, and `Retry-After` can be used to
    push them back.
 
    Saturation conditions can be either dynamic or static: all this is out of
