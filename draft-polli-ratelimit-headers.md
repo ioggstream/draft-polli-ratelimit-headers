@@ -398,7 +398,7 @@ A server MAY return `RateLimit` response header fields independently
 of the response status code.  This includes throttled responses.
 
 If a response contains both the `Retry-After` and the `RateLimit-Reset` header fields,
-the value of `RateLimit-Reset` MAY reference the same point in time as
+the value of `RateLimit-Reset` SHOULD reference the same point in time as
 `Retry-After`.
 
 When using a policy involving more than one `time-window`,
