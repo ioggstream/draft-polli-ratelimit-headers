@@ -656,7 +656,10 @@ RateLimit-Limit: 10, 100;w=60
 Ratelimit-Remaining: 9
 Ratelimit-Reset: 50
 
-{"hello": "world"}
+{
+  "status": 200,
+  "detail": "Just slow down without waiting."
+}
 ~~~
 
 ### Dynamic limits for pushing back and slowing down
@@ -679,10 +682,15 @@ Response:
 
 ~~~
 HTTP/1.1 429 Too Many Requests
+Content-Type: application/json
 RateLimit-Limit: 0, 15;w=20
 Ratelimit-Remaining: 0
 Ratelimit-Reset: 20
 
+{
+  "status": 429,
+  "detail": "Wait 20 seconds, then slow down!"
+}
 ~~~
 
 ## Dynamic limits for pushing back with Retry-After and slow down
@@ -706,11 +714,16 @@ Response:
 
 ~~~
 HTTP/1.1 429 Too Many Requests
+Content-Type: application/json
 Retry-After: 20
 RateLimit-Limit: 15, 100;w=60
 Ratelimit-Remaining: 15
 Ratelimit-Reset: 40
 
+{
+  "status": 429,
+  "detail": "Wait 20 seconds, then slow down!"
+}
 ~~~
 
 Note that in this last response the client is expected to honor the
