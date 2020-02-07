@@ -954,6 +954,7 @@ RFC EDITOR PLEASE DELETE THIS SECTION.
 # Acknowledgements
 
 Thanks to Willi Schoenborn, Alejandro Martinez Ruiz, Alessandro Ranellucci,
+Amos Jeffries,
 Erik Wilde and Mark Nottingham for being the initial contributors
  of these specifications.
 
