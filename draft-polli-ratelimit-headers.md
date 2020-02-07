@@ -632,7 +632,7 @@ the server accepts 100 quota-units per minute.
 To avoid resource exhaustion, the server artificially lowers
 the actual limits returned in the throttling headers.
 
-The current policy then advertises
+The  `RateLimit-Remaining` then advertises
 only 9 quota-units for the next 50 seconds to slow down the client.
 
 Note that the server could have lowered even the other
