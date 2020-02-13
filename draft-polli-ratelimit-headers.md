@@ -269,9 +269,8 @@ This specification allows describing a quota policy with the following syntax:
    quota-comment = token "=" (token / quoted-string)
 ~~~
 
-In each policy,
 quota-policy parameters like `w`, `s` and
-quota-comment tokens MUST NOT occur multiple times.
+quota-comment tokens MUST NOT occur multiple times within the same quota-policy.
 
 An example policy of 100 quota-units per minute.
 
