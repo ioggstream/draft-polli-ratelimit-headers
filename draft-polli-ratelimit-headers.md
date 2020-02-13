@@ -167,11 +167,6 @@ The goals do not include:
   : The rate-limit headers described here are not meant to support
     authorization or other kinds of access controls.
 
-  Throttling scope:
-  : This specification does not cover the throttling scope,
-    that may be the given resource-target, its parent path or the whole
-    Origin [RFC6454] section 7.
-
   Response status code:
   : The rate-limit headers may be returned in both
     Successful and non Successful responses.
@@ -215,6 +210,18 @@ A time window is expressed in seconds, using the following syntax:
 
 Subsecond precision is not supported.
 
+## Throttling scope {#throttling-scope}
+
+Like Retry-After, the scope of the RateLimit headers may be the target resource,
+its parent path or the whole Origin (see [RFC6454], Section 7).
+
+The quota-scope parameter can be used to convey the URI or path associated
+to the quota-policy and to the RateLimit headers.
+
+~~~abnf
+   quota-scope = "s" "=" quoted-string
+~~~
+
 ## Request quota {#request-quota}
 
 The request-quota is a value associated to the maximum number of requests
@@ -257,18 +264,26 @@ This specification allows describing a quota policy with the following syntax:
 
 ~~~
    quota-policy = request-quota; "w" "=" time-window
+                  [  OWS ";" OWS quota-scope]
                   *( OWS ";" OWS quota-comment)
    quota-comment = token "=" (token / quoted-string)
 ~~~
 
 In each policy,
-quota-policy parameters like `w` and
+quota-policy parameters like `w`, `s` and
 quota-comment tokens MUST NOT occur multiple times.
 
 An example policy of 100 quota-units per minute.
 
 ~~~
    100;w=60
+~~~
+
+An example policy narrowing the scope of the headers
+to a given path using the quota-scope defined in {{throttling-scope}}.
+
+~~~
+   100;w=60;s="/book/v1"
 ~~~
 
 Two examples of providing further details via custom parameters
@@ -1029,9 +1044,11 @@ At this point you should stop increasing your request rate.
    No. [RFC6585] defines the `429` status code and we use it just as an example of a throttled request,
    that could instead use even 403 or whatever status code.
 
-4. Why don't pass the trottling scope as a parameter?
+4. Why pass the scope as a parameter?
 
-   I'm open to suggestions. File an issue if you think it's worth ;).
+   We discussed [Retry-After scope](https://github.com/httpwg/http-core/issues/99) and
+   the most sensible way to pass it was via headers or body, as it could not be
+   inferred by the spec (Retry-After definition speaks of "service").
 
 5. Why using delta-seconds instead of a UNIX Timestamp?
    Why not using subsecond precision?
