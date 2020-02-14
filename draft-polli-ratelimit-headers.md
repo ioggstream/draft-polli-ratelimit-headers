@@ -961,7 +961,7 @@ Amos Jeffries,
 Martin Thomson,
 Erik Wilde and Mark Nottingham for being the initial contributors
  of these specifications.
-Kudos to all the implementors:
+Kudos to the first community implementors:
 Aapo Talvensaari,
 Nathan Friedly
 and Sanyam Dogra.
