@@ -958,8 +958,13 @@ RFC EDITOR PLEASE DELETE THIS SECTION.
 
 Thanks to Willi Schoenborn, Alejandro Martinez Ruiz, Alessandro Ranellucci,
 Amos Jeffries,
+Martin Thomson,
 Erik Wilde and Mark Nottingham for being the initial contributors
  of these specifications.
+Kudos to the first community implementors:
+Aapo Talvensaari,
+Nathan Friedly
+and Sanyam Dogra.
 
 # RateLimit headers currently used on the web
 
