@@ -383,7 +383,7 @@ after the moment referenced by `RateLimit-Reset`.
 The server MAY arbitrarily alter the `RateLimit-Reset` value between subsequent requests
 eg. in case of resource saturation or to implement sliding window policies.
 
-# Providing RateLimit headers
+# Providing RateLimit headers {#providing-ratelimit-headers}
 
 A server MAY use one or more `RateLimit` response header fields
 defined in this document to communicate its quota policies.
@@ -514,7 +514,7 @@ RateLimit-Reset: 36000
 ~~~
 
 
-### Use for limiting concurrency
+### Use for limiting concurrency {#use-for-limiting-concurrency}
 
 Throttling headers may be used to limit concurrency,
 advertising limits that are lower than the usual ones
@@ -826,7 +826,7 @@ RateLimit-Reset: 36000
 
 # Security Considerations
 
-## Throttling does not prevent clients from issuing requests
+## Throttling does not prevent clients from issuing requests {#sec-throttling-does-not-prevent}
 
 This specification does not prevent clients to
 make over-quota requests.
@@ -834,7 +834,7 @@ make over-quota requests.
 Servers should always implement mechanisms
 to prevent resource exhaustion.
 
-## Information disclosure
+## Information disclosure {#sec-information-disclosure}
 
 Servers should not disclose operational capacity informations that
 can be used to saturate its resources.
