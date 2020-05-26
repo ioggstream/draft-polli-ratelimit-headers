@@ -1033,9 +1033,12 @@ At this point you should stop increasing your request rate.
    No. [RFC6585] defines the `429` status code and we use it just as an example of a throttled request,
    that could instead use even 403 or whatever status code.
 
-4. Why don't pass the trottling scope as a parameter?
+4. Why don't pass the throttling scope as a parameter?
 
-   I'm open to suggestions. File an issue if you think it's worth ;).
+   After a discussion on a [similar thread](https://github.com/httpwg/http-core/pull/317#issuecomment-585868767)
+   we will probably add a new "RateLimit-Scope" header to this spec.
+
+   I'm open to suggestions: comment on [this issue](https://github.com/ioggstream/draft-polli-ratelimit-headers/issues/70)
 
 5. Why using delta-seconds instead of a UNIX Timestamp?
    Why not using subsecond precision?
@@ -1067,20 +1070,19 @@ At this point you should stop increasing your request rate.
 
 7. Shouldn't I limit concurrency instead of request rate?
 
-   You can do both. The goal of this spec is to provide guidance for
-   clients in shaping their requests without being throttled out.
+   You can use this specification to limit concurrency
+   at the HTTP level (see {#use-for-limiting-concurrency})
+   and help clients to
+   shape their requests avoiding being throttled out.
 
-   Limiting concurrency results in unserviced client requests,
+   A problematic way to limit concurrency is connection dropping,
+   especially when connections are multiplexed (eg. HTTP/2)
+   because this results in unserviced client requests,
    which is something we want to avoid.
 
-   A standard way to limit concurrency is to return 503 + Retry-After
+   A semantic way to limit concurrency is to return 503 + Retry-After
    in case of resource saturation (eg. thrashing, connection queues too long,
    Service Level Objectives not meet, ..).
-
-   Availability can be improved by dynamically lowering the values returned by
-   the `RateLimit-*` headers to slow down clients, and `Retry-After` can be used to
-   push them back.
-
    Saturation conditions can be either dynamic or static: all this is out of
    the scope for the current document.
 
@@ -1127,3 +1129,19 @@ RateLimit-Limit: 100, 100;w=60;burst=1000;comment="sliding window", 5000;w=3600;
    Using a single header complicates parsing and takes
    a significantly different approach from the existing
    ones: this can limit adoption.
+
+12. Why don't mention connections?
+
+    Beware of the term "connection":
+￼
+￼   - it is just *one* possible saturation cause. Once you go that path
+￼     you will expose other infrastructural details (bandwidth, CPU, .. see {{sec-information-disclosure}})
+￼     and complicate client compliance;
+￼   - it is an infrastructural detail defined in terms of server and network
+￼     rather than the consumed service.
+      This specification protects the services first,
+      and then the infrastructures through client cooperation (see {{sec-throttling-does-not-prevent}}).
+￼
+￼   RateLimit headers enable sending *on the same connection* different limit values
+￼   on each response, depending on the policy scope (eg. per-user, per-custom-key, ..)
+￼
