@@ -167,11 +167,6 @@ The goals do not include:
   : The rate-limit headers described here are not meant to support
     authorization or other kinds of access controls.
 
-  Throttling scope:
-  : This specification does not cover the throttling scope,
-    that may be the given resource-target, its parent path or the whole
-    Origin [RFC6454] section 7.
-
   Response status code:
   : The rate-limit headers may be returned in both
     Successful and non Successful responses.
@@ -197,7 +192,7 @@ when, and only when, they appear in all capitals, as shown here.
 
 This document uses the Augmented BNF defined in [RFC5234] and updated
 by [RFC7405] along with the "#rule" extension defined in Section 7 of
-[RFC7230].
+[RFC7230] and the "URI-reference" rule defined in Section 4.1 of {{!RFC3986}}.
 
 The term Origin is to be interpreted as described in [RFC6454] section 7.
 
@@ -382,6 +377,43 @@ The client MUST NOT assume that all its `request-quota` will be restored
 after the moment referenced by `RateLimit-Reset`.
 The server MAY arbitrarily alter the `RateLimit-Reset` value between subsequent requests
 eg. in case of resource saturation or to implement sliding window policies.
+
+## RateLimit-Scope {#ratelimit-scope}
+
+The scope of the RateLimit headers may be the target resource,
+its parent path or the whole Origin.
+
+The RateLimit-Scope field can be used to convey the URI or path
+associated￼to the returned RateLimit headers.
+
+The field value is
+
+~~~ abnf
+   RateLimit-Scope = URI-reference
+~~~
+
+This field MUST NOT occur multiple times;
+if a user agent receives multiple
+RateLimit-Scope fields, then it SHOULD ignore them.
+
+RateLimit-Scope can be sent in a trailer section.
+
+Intermediaries aware of the field semantics
+(eg. reverse proxies)
+MAY modify the URI-reference
+in order to help the user agent to correctly identify the scope
+and ensure that the field value matches the target URI,
+like they would have done
+for the Location header field defined in Section 7.1.2 of [RFC7231].
+
+
+Two examples of Retry-Scope:
+
+~~~ example
+   RateLimit-Scope: /books
+   RateLimit-Scope: https://api.example/
+~~~
+￼
 
 # Providing RateLimit headers {#providing-ratelimit-headers}
 
@@ -946,6 +978,20 @@ Author/Change controller:  IETF
 
 Specification document(s):  {{ratelimit-reset-header}} of this document
 
+## RateLimit-Scope Field Registration
+
+This section registers the `RateLimit-Scope` field in the "Permanent
+ Message Header Field Names" registry ({{!RFC3864}}).
+
+Field name:  `RateLimit-Scope`
+
+Applicable protocol:  http
+
+Status:  standard
+
+Author/Change controller:  IETF
+
+Specification document(s):  {{ratelimit-scope}} of this document
 
 --- back
 
