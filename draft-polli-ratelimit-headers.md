@@ -325,7 +325,8 @@ Policies using multiple quota limits MAY be returned using multiple
    RateLimit-Limit: 10, 10;w=1;burst=1000, 1000;w=3600
 ~~~
 
-This header MUST NOT occur multiple times.
+This header MUST NOT occur multiple times
+and can be sent in a trailer section.
 
 ## RateLimit-Remaining {#ratelimit-remaining-header}
 
@@ -338,7 +339,8 @@ The header value is
    RateLimit-Remaining = quota-units
 ~~~
 
-This header MUST NOT occur multiple times.
+This header MUST NOT occur multiple times
+and can be sent in a trailer section.
 
 Clients MUST NOT assume that a positive `RateLimit-Remaining` value is
 a guarantee of being served.
@@ -370,7 +372,8 @@ The delta-seconds format is used because:
   and clock skew between client and server (see [RFC7231] Section 4.1.1.1);
 - it mitigates the risk related to thundering herd when too many clients are serviced with the same timestamp.
 
-This header MUST NOT occur multiple times.
+This header MUST NOT occur multiple times
+and can be sent in a trailer section.
 
 An example of `RateLimit-Reset` use is below.
 
@@ -415,6 +418,12 @@ with the lower `RateLimit-Remaining` values.
 
 Under certain conditions, a server MAY artificially lower `RateLimit` field values between subsequent requests,
 eg. to respond to Denial of Service attacks or in case of resource saturation.
+
+Servers usually establish whether the request is in-quota before creating a
+response, so the RateLimit field values should be already available in that
+moment.
+Nonetheless servers MAY decide to send the `RateLimit` fields
+in a trailer section.
 
 # Receiving RateLimit headers
 
