@@ -25,13 +25,6 @@ author:
     email: amr@redhat.com
 
 normative:
-  RFC2119:
-  RFC5234:
-  RFC6454:
-  RFC7230:
-  RFC7231:
-  RFC7405:
-  RFC8174:
   UNIX:
     title: The Single UNIX Specification, Version 2 - 6 Vol Set for UNIX 98
     author:
@@ -69,7 +62,7 @@ requires an explicit way of communicating service status and
 usage quotas.
 
 This was partially addressed with the `Retry-After` header field
-defined in [RFC7231] to be returned in `429 Too Many Requests` or
+defined in {{!SEMANTICS=RFC7231}} to be returned in `429 Too Many Requests` or
 `503 Service Unavailable` responses.
 
 Still, there is not a standard way to communicate service quotas
@@ -170,7 +163,7 @@ The goals do not include:
   Throttling scope:
   : This specification does not cover the throttling scope,
     that may be the given resource-target, its parent path or the whole
-    Origin [RFC6454] section 7.
+    Origin {{!RFC6454}} section 7.
 
   Response status code:
   : The rate-limit headers may be returned in both
@@ -190,18 +183,15 @@ The goals do not include:
 
 ## Notational Conventions
 
-The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD",
-"SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "OPTIONAL" in this
-document are to be interpreted as described in BCP 14 ([RFC2119] and [RFC8174])
-when, and only when, they appear in all capitals, as shown here.
+{::boilerplate bcp14}
 
-This document uses the Augmented BNF defined in [RFC5234] and updated
-by [RFC7405] along with the "#rule" extension defined in Section 7 of
-[RFC7230].
+This document uses the Augmented BNF defined in {{!RFC5234}} and updated
+by {{!RFC7405}} along with the "#rule" extension defined in Section 7 of
+{{!MESSAGING=RFC7230}}.
 
-The term Origin is to be interpreted as described in [RFC6454] section 7.
+The term Origin is to be interpreted as described in {{!RFC6454}} section 7.
 
-The "delta-seconds" rule is defined in {{!RFC7234}} section 1.2.1.
+The "delta-seconds" rule is defined in {{CACHING}} section 1.2.1.
 
 # Expressing rate-limit policies
 
@@ -369,7 +359,7 @@ The header value is
 The delta-seconds format is used because:
 
 - it does not rely on clock synchronization and is resilient to clock adjustment
-  and clock skew between client and server (see [RFC7231] Section 4.1.1.1);
+  and clock skew between client and server (see {{SEMANTICS}} Section 4.1.1.1);
 - it mitigates the risk related to thundering herd when too many clients are serviced with the same timestamp.
 
 This header MUST NOT occur multiple times
@@ -998,7 +988,7 @@ Here are some interoperability issues:
    * seconds remaining to the window expiration
    * milliseconds remaining to the window expiration
    * seconds since UTC, in UNIX Timestamp
-   * a datetime, either `IMF-fixdate` [RFC7231] or {{?RFC3339}}
+   * a datetime, either `IMF-fixdate` {{SEMANTICS}} or {{?RFC3339}}
 
 - different headers, with the same semantic, are used by different implementers:
 
@@ -1039,7 +1029,7 @@ At this point you should stop increasing your request rate.
 
 3. Are those specs tied to RFC 6585?
 
-   No. [RFC6585] defines the `429` status code and we use it just as an example of a throttled request,
+   No. {{?RFC6585}} defines the `429` status code and we use it just as an example of a throttled request,
    that could instead use even 403 or whatever status code.
 
 4. Why don't pass the throttling scope as a parameter?
@@ -1055,9 +1045,9 @@ At this point you should stop increasing your request rate.
    Using delta-seconds aligns with `Retry-After`, which is returned in similar contexts,
    eg on 429 responses.
 
-   delta-seconds as defined in [RFC7234] section 1.2.1 clarifies some parsing rules too.
+   delta-seconds as defined in {{!CACHING=RFC7234}} section 1.2.1 clarifies some parsing rules too.
 
-   Timestamps require a clock synchronization protocol (see [RFC7231] section 4.1.1.1).
+   Timestamps require a clock synchronization protocol (see {{SEMANTICS}} section 4.1.1.1).
    This may be problematic (eg. clock adjustment, clock skew, failure of hardcoded clock synchronization servers,
    IoT devices, ..).
    Moreover timestamps may not be monotonically increasing due to clock adjustment.
