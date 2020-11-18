@@ -415,26 +415,29 @@ moment.
 Nonetheless servers MAY decide to send the `RateLimit` fields
 in a trailer section.
 
-# Intermediaries
+# Intermediaries {#intermediaries}
 
 This section documents the considerations advised in Section 15.3.3 of {{SEMANTICS}}.
 
-An intermediary MUST NOT alter the RateLimit headers values
+An intermediary that is not part of the originating service infrastructure
+and is not aware of the quota-policy semantic used by the Origin Server
+SHOULD NOT alter the RateLimit fields' values
 in such a way as to communicate a more permissive quota-policy;
-this includes removing the RateLimit headers.
+this includes removing the RateLimit fields.
 
-An intermediary MAY alter the RateLimit headers
+An intermediary MAY alter the RateLimit fields 
 in such a way as to communicate a more restrictive quota-policy when:
 
 - it is aware of the quota-unit semantic used by the Origin Server;
 - it implements this specification and enforces a quota-policy which
-  is more restrictive than the one conveyed in the headers.
+  is more restrictive than the one conveyed in the fields.
 
 An intermediary
-SHOULD forward a request even if it presumes that that request
+SHOULD forward a request even when presuming that it
 might not be serviced;
-the service returning the RateLimit headers is the sole responsible
-of enforcing the communicated quota-policy.
+the service returning the RateLimit fields is the sole responsible
+of enforcing the communicated quota-policy,
+and it is always free to service incoming requests.
 
 This specification does not mandate any behavior on intermediaries
 respect to retries,
@@ -446,9 +449,10 @@ without notifying the client, and thus consuming quota-units.
 
 
 As is the ordinary case for HTTP caching ({{?RFC7234}}), a response with
-RateLimit header fields might be cached and re-used for subsequent requests.
+RateLimit fields might be cached and re-used for subsequent requests.
 A cached RateLimit response, does not modify quota counters but could contain stale information.
-Clients interested in determining the freshness of the RateLimit headers could rely on fields such as `Date` and on the `window` value of a `quota-policy`.
+Clients interested in determining the freshness of the RateLimit fields could rely on fields such as `Date` and on the `window` value of a `quota-policy`.
+
 # Receiving RateLimit headers
 
 A client MUST process the received `RateLimit` headers.
@@ -1183,3 +1187,10 @@ RateLimit-Limit: 100, 100;w=60;burst=1000;comment="sliding window", 5000;w=3600;
 ￼   RateLimit headers enable sending *on the same connection* different limit values
 ￼   on each response, depending on the policy scope (eg. per-user, per-custom-key, ..)
 ￼
+13. Can intermediaries alter RateLimit fields?
+
+    Generally, they should not because it might result in unserviced requests.
+    There are reasonable use cases for intermediaries mangling RateLimit fields though,
+    e.g. when they enforce stricter quota-policies,
+    or when they are an active component of the service.
+    In those case we will consider them as part of the originating infrastructure.
