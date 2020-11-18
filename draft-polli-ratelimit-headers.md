@@ -442,11 +442,11 @@ without notifying the client, and thus consuming quota-units.
 
 # Caching
 
-The RateLimit headers MUST NOT be cached because their values are ephemeral.
 
-Apart from that, as is the ordinary case for HTTP caching ({{?RFC7234}}), a response with
+As is the ordinary case for HTTP caching ({{?RFC7234}}), a response with
 RateLimit header fields might be cached and re-used for subsequent requests.
-
+A cached RateLimit response, does not modify quota counters but could contain stale information.
+Clients interested in determining the freshness of the RateLimit headers could rely on fields such as `Date` and on the `window` value of a `quota-policy`.
 # Receiving RateLimit headers
 
 A client MUST process the received `RateLimit` headers.
