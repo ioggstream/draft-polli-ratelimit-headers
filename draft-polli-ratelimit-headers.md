@@ -431,7 +431,7 @@ in such a way as to communicate a more restrictive quota-policy when:
 An intermediary
 SHOULD forward a request even if it presumes that that request
 might not be serviced;
-the server returning the RateLimit headers is the sole responsible
+the service returning the RateLimit headers is the sole responsible
 of enforcing the communicated quota-policy.
 
 This specification does not mandate any behavior on intermediaries
