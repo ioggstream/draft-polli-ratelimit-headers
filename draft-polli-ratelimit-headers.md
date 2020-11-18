@@ -37,7 +37,7 @@ informative:
 
 --- abstract
 
-This document defines the RateLimit-Limit, RateLimit-Remaining, RateLimit-Reset header fields for HTTP,
+This document defines the RateLimit-Limit, RateLimit-Remaining, RateLimit-Reset fields for HTTP,
 thus allowing servers to publish current request quotas and
 clients to shape their request policy and avoid being throttled out.
 
@@ -131,7 +131,7 @@ reverse proxies may reply with different throttling headers.
 
 ## This proposal
 
-This proposal defines syntax and semantics for the following header fields:
+This proposal defines syntax and semantics for the following fields:
 
 - `RateLimit-Limit`: containing the requests quota in the time window;
 - `RateLimit-Remaining`: containing the remaining requests quota in the current window;
@@ -139,7 +139,7 @@ This proposal defines syntax and semantics for the following header fields:
 
 The behavior of `RateLimit-Reset` is compatible with the `delta-seconds` notation of `Retry-After`.
 
-The header fields definition allows to describe complex policies, including the ones
+The fields definition allows to describe complex policies, including the ones
 using multiple and variable time windows and dynamic quotas, or implementing concurrency limits.
 
 ## Goals
@@ -152,7 +152,7 @@ The goals of this proposal are:
       the enforcement and the adoption of rate-limit headers;
 
    3. Simplify API documentation avoiding expliciting
-      rate-limit header fields semantic in documentation.
+      rate-limit fields semantic in documentation.
 
 The goals do not include:
 
@@ -270,11 +270,11 @@ in `quota-comments`.
 
 # Header Specifications
 
-The following `RateLimit` response header fields are defined
+The following `RateLimit` response fields are defined
 
 ## RateLimit-Limit {#ratelimit-limit-header}
 
-The `RateLimit-Limit` response header field indicates
+The `RateLimit-Limit` response field indicates
 the `request-quota` associated to the client
 in the current `time-window`.
 
@@ -320,7 +320,7 @@ and can be sent in a trailer section.
 
 ## RateLimit-Remaining {#ratelimit-remaining-header}
 
-The `RateLimit-Remaining` response header field indicates the remaining `quota-units` defined in {{request-quota}}
+The `RateLimit-Remaining` response field indicates the remaining `quota-units` defined in {{request-quota}}
 associated to the client.
 
 The header value is
@@ -346,7 +346,7 @@ One example of `RateLimit-Remaining` use is below.
 
 ## RateLimit-Reset {#ratelimit-reset-header}
 
-The `RateLimit-Reset` response header field indicates either
+The `RateLimit-Reset` response field indicates either
 
 - the number of seconds until the quota resets.
 
@@ -378,13 +378,13 @@ eg. in case of resource saturation or to implement sliding window policies.
 
 # Providing RateLimit headers {#providing-ratelimit-headers}
 
-A server MAY use one or more `RateLimit` response header fields
+A server MAY use one or more `RateLimit` response fields
 defined in this document to communicate its quota policies.
 
 The returned values refers to the metrics used to evaluate if the current request
 respects the quota policy and MAY not apply to subsequent requests.
 
-Example: a successful response with the following header fields
+Example: a successful response with the following fields
 
 ~~~
    RateLimit-Limit: 10
@@ -395,10 +395,10 @@ Example: a successful response with the following header fields
 does not guarantee that the next request will be successful. Server metrics may be subject to other
 conditions like the one shown in the example from {{request-quota}}.
 
-A server MAY return `RateLimit` response header fields independently
+A server MAY return `RateLimit` response fields independently
 of the response status code.  This includes throttled responses.
 
-If a response contains both the `Retry-After` and the `RateLimit-Reset` header fields,
+If a response contains both the `Retry-After` and the `RateLimit-Reset` fields,
 the value of `RateLimit-Reset` SHOULD reference the same point in time as
 `Retry-After`.
 
@@ -477,9 +477,9 @@ estimate the `RateLimit-Reset` moment intended by the server.
 The `quota-policy` values and comments provided in `RateLimit-Limit` are informative
 and MAY be ignored.
 
-If a response contains both the `RateLimit-Reset` and `Retry-After` header fields,
+If a response contains both the `RateLimit-Reset` and `Retry-After` fields,
 the `Retry-After` header field MUST take precedence and
-the `RateLimit-Reset` header field MAY be ignored.
+the `RateLimit-Reset` field MAY be ignored.
 
 # Examples
 
@@ -927,7 +927,7 @@ This could be mitigated adding some jitter to the field-value.
 
 ## Denial of Service
 
-`RateLimit` header fields may assume unexpected values by chance or purpose.
+`RateLimit` fields may assume unexpected values by chance or purpose.
 For example, an excessively high `RateLimit-Remaining` value may be:
 
 - used by a malicious intermediary to trigger a Denial of Service attack
@@ -943,48 +943,36 @@ Clients MUST validate the received values to mitigate those risks.
 # IANA Considerations
 
 
-## RateLimit-Limit Header Field Registration
+## RateLimit-Limit Field Registration
 
-This section registers the `RateLimit-Limit` header field in the "Permanent Message
-Header Field Names" registry ({{!RFC3864}}).
+This section registers the `RateLimit-Limit` field in the
+"Hypertext Transfer Protocol (HTTP) Field Name Registry" registry ({{SEMANTICS}}).
 
-Header field name:  `RateLimit-Limit`
+Field name:  `RateLimit-Limit`
 
-Applicable protocol:  http
-
-Status:  standard
-
-Author/Change controller:  IETF
+Status:  permanent
 
 Specification document(s):  {{ratelimit-limit-header}} of this document
 
-## RateLimit-Remaining Header Field Registration
+## RateLimit-Remaining Field Registration
 
-This section registers the `RateLimit-Remaining` header field in the "Permanent Message
-Header Field Names" registry ({{!RFC3864}}).
+This section registers the `RateLimit-Remaining` field in the
+"Hypertext Transfer Protocol (HTTP) Field Name Registry" registry ({{SEMANTICS}}).
 
-Header field name:  `RateLimit-Remaining`
+Field name:  `RateLimit-Remaining`
 
-Applicable protocol:  http
-
-Status:  standard
-
-Author/Change controller:  IETF
+Status:  permanent
 
 Specification document(s):  {{ratelimit-remaining-header}} of this document
 
-## RateLimit-Reset Header Field Registration
+## RateLimit-Reset Field Registration
 
-This section registers the `RateLimit-Reset` header field in the "Permanent Message
-Header Field Names" registry ({{!RFC3864}}).
+This section registers the `RateLimit-Reset` field in the
+"Hypertext Transfer Protocol (HTTP) Field Name Registry" registry ({{SEMANTICS}}).
 
-Header field name:  `RateLimit-Reset`
+Field name:  `RateLimit-Reset`
 
-Applicable protocol:  http
-
-Status:  standard
-
-Author/Change controller:  IETF
+Status:  permanent
 
 Specification document(s):  {{ratelimit-reset-header}} of this document
 
