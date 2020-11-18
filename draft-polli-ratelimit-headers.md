@@ -417,6 +417,8 @@ in a trailer section.
 
 # Intermediaries
 
+This section documents the considerations advised in Section 15.3.3 of {{SEMANTICS}}.
+
 An intermediary MUST NOT alter the RateLimit headers values
 in such a way as to communicate a more permissive quota-policy;
 this includes removing the RateLimit headers.
