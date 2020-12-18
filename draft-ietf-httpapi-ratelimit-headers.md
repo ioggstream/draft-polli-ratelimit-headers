@@ -1,12 +1,12 @@
 ---
 title: RateLimit Header Fields for HTTP
 abbrev:
-docname: draft-polli-ratelimit-headers-latest
+docname: draft-ietf-httpapi-ratelimit-headers-latest
 category: std
 
 ipr: trust200902
 area: Applications and Real-Time
-workgroup: HTTP
+workgroup: HTTPAPI
 keyword: Internet-Draft
 
 stand_alone: yes
@@ -46,11 +46,11 @@ clients to shape their request policy and avoid being throttled out.
 *RFC EDITOR: please remove this section before publication*
 
 Discussion of this draft takes place on the HTTP working group mailing list
-(ietf-http-wg@w3.org), which is archived at
-<https://lists.w3.org/Archives/Public/ietf-http-wg/>.
+(httpapi@ietf.org), which is archived at
+<https://lists.w3.org/Archives/Public/ietf-httpapi-wg/>.
 
 The source code and issues list for this draft can be found at
-<https://github.com/ioggstream/draft-polli-ratelimit-headers>.
+<https://github.com/ietf-wg-httpapi/ratelimit-headers>.
 
 
 --- middle
